@@ -3,13 +3,12 @@ Aliens vs Predator Linux  http://icculus.org/avp/
 
 Table of Contents:
 1. Introduction
-2. Current Status
-3. Compilation
-4. Installation
-5. Credits
+2. Compilation
+3. Installation
+4. Credits
 a. Change History
 b. Gold edition MD5s
-
+5. Gibbon's additions
 
 Part 1: Introduction
 --------------------
@@ -25,24 +24,14 @@ http://community.ioquake.org/c/avp
 
 Please see LICENSE for copyright and licensing information.
 
-
-Part 2: Current Status
-----------------------
-
-As of this release, i686 and x86_64 builds have been tested on Mac OS X
-10.8, Ubuntu 14.04 LTS and Fedora 21.
-
 Previously missing features are still missing.  Multiplayer, movies, etc.
 
-
-Part 3: Compilation
+Part 2: Compilation
 -------------------
 
-CMake, SDL 1.2, OpenAL and OpenGL support are required.  SDL 2.0 support is
-also available but is experimental and incomplete at this time.
+CMake, SDL 2, OpenAL and OpenGL support are required.
 
 An example of how to use CMake to build the game:
-$ tar xvzf <avp-source-code>.tar.gz
 $ cd <avp-source-code>
 $ mkdir build
 $ cd build
@@ -51,8 +40,7 @@ $ make
 
 If all goes well, an executable named "avp" will be built.
 
-
-Part 4: Installation
+Part 3: Installation
 --------------------
 
 All of the AvP game data, files and directories, need to be lowercase. 
@@ -61,8 +49,7 @@ AVP_DATA environment variable to the game data directory.
 
 Local user settings are stored in ~/.avp.
 
-
-Part 5: Credits
+Part 4: Credits
 ---------------
 
 The original game is by Rebellion Developments.
@@ -70,21 +57,6 @@ The original game is by Rebellion Developments.
 Tim Beckmann, various code cleanup fixes
 Chuck Mason, initial OpenAL implementation
 
-For everything else, there's http://community.ioquake.org/c/avp
-
-Appendix A: Change History
---------------------------
-
-20150214:
-OpenGL ES 1.1 compatibility
-SDL2 support progress
-
-20141225:
-CMake build system
-x86_64 support
-Beginnings of SDL2 support
-
- 
 Appendix B: Gold edition MD5s
 -----------------------------
 
@@ -290,3 +262,10 @@ MD5 (fastfile/tex7.ffl) = a1ee192c4a44d5bdb6dc1fe290c9fa77
 MD5 (fastfile/tex8.ffl) = 69c927deb5448b63a9c11186e8c29d3b
 MD5 (fastfile/tex9.ffl) = 156b6dcdc3b92a9d6c0cfdfbc2421b10
 MD5 (language.txt) = 10564fea944ef6680191ecc89a4616d5
+
+Part 5: Gibbon's Additions
+--------------------------
+
+Gibbon has fixed SDL2, performed code cleanups and fixed various crashes and stack smashing issues on Linux.
+
+The future is bright for this port, like all my projects I am aiming for this to be portable to 'everything'.  Wanna play it on an RPI3?  Hold my beer..
