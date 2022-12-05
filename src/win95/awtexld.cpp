@@ -145,8 +145,7 @@ namespace AwTl
 		DWORD memFlag;
 		
 		void * ddP;
-	}
-		driverDesc;
+	} driverDesc;
 
 	/*************************************************************************/
 	/* Class used to hold all the parameters for the CreateTexture functions */
@@ -496,6 +495,9 @@ void AwBackupTexture::ChoosePixelFormat(AwTl::CreateTextureParms const & _parmsR
 
 #endif		
 		/* Just convert the texture to 32bpp */
+		// may want to support paletted textures
+		// at some point; at which point, should
+		// push texture conversion into the opengl layer
 		pixelFormat.palettizedB = 0;
 		
 		pixelFormat.alphaB = 1;
@@ -540,7 +542,15 @@ AwTl::SurfUnion AwBackupTexture::CreateTexture(AwTl::CreateTextureParms const & 
 		fprintf(stderr, "AwBackupTexture::CreateTexture - chroma\n");
 	}
 	
+	if (pixelFormat.texB && m_bTranspMask) {
+		//fprintf(stderr, "AwBackupTexture::CreateTexture - transparency\n");
+	}
+
 	// convert asset to 32-bit rgba
+	// may want to support paletted textures
+	// at some point; at which point, should
+	// push texture conversion into the opengl layer
+
 			unsigned char *buf = (unsigned char *)malloc(m_nWidth * m_nHeight * 4);
 			
 			Colour * paletteP = m_nPaletteSize ? GetPalette() : NULL;
@@ -591,6 +601,8 @@ AwTl::SurfUnion AwBackupTexture::CreateTexture(AwTl::CreateTextureParms const & 
 
 	Tex->w = m_nWidth;
 	Tex->h = m_nHeight;
+	Tex->hasAlpha = m_bTranspMask;
+	Tex->hasChroma = m_fFlags & AW_TLF_CHROMAKEY;
 
 	if (pixelFormat.texB) {
 		CreateOGLTexture(Tex, buf);

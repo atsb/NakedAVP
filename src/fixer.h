@@ -76,6 +76,8 @@ extern "C" {
 
 #define _snprintf   snprintf
 
+#define __inline    inline
+
 size_t _mbclen(const unsigned char *s);
 
 #define RGBA_MAKE(r, g, b, a)   ((((a) << 24) | ((r) << 16) | ((g) << 8) | (b)))

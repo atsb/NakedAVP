@@ -1,3 +1,4 @@
+#include "unaligned.h"
 #include "3dc.h"
 #include "ourasert.h"
 #include "psndplat.h"
@@ -98,9 +99,9 @@ void CharacterSoundEffects::LoadSounds(const char* filename,const char* director
 
 	char* bufpos=buffer+8;
 
-	num_voice_types=*(int*)bufpos;
+	num_voice_types=*(unaligned_s32*)bufpos;
 	bufpos+=4;
-	num_voice_cats=*(int*)bufpos;
+	num_voice_cats=*(unaligned_s32*)bufpos;
 	bufpos+=4;
 	
 	voice_types=(ScreamVoiceType*) PoolAllocateMem(num_voice_types * sizeof(ScreamVoiceType));
@@ -116,7 +117,7 @@ void CharacterSoundEffects::LoadSounds(const char* filename,const char* director
 		{
 			ScreamSoundCategory* cat=&voice_types[i].category[j];
 			cat->last_sound=SID_NOSOUND;
-			cat->num_sounds=*(int*)bufpos;
+			cat->num_sounds=*(unaligned_s32*)bufpos;
 			bufpos+=4;
 
 			if(cat->num_sounds)
@@ -135,9 +136,9 @@ void CharacterSoundEffects::LoadSounds(const char* filename,const char* director
 				strcpy(wavname,bufpos);
 				bufpos+=strlen(bufpos)+1;
 
-				sound->pitch=*(int*)bufpos;
+				sound->pitch=*(unaligned_s32*)bufpos;
 				bufpos+=4;
-				sound->volume=*(int*)bufpos;
+				sound->volume=*(unaligned_s32*)bufpos;
 				bufpos+=4;
 
 				sound->sound_loaded=GetSound(wavpath);

@@ -31,7 +31,7 @@
 	them though.
 */
 
-static inline int MUL_FIXED(int a, int b)
+static __inline int MUL_FIXED(int a, int b)
 {
 /*
 	int retval;

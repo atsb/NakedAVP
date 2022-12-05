@@ -1,5 +1,5 @@
 #include <math.h>
-
+#include "unaligned.h"
 #include "chunk.hpp"
 #include "chnktype.hpp"
 #include "shpchunk.hpp"
@@ -1610,9 +1610,9 @@ Shape_External_Filename_Chunk::Shape_External_Filename_Chunk(Chunk_With_Children
 Shape_External_Filename_Chunk::Shape_External_Filename_Chunk (Chunk_With_Children * parent, const char *fdata, size_t /*fsize*/)
 : Chunk (parent, "SHPEXTFN")
 {
-	rescale = *((double *) fdata);
+	rescale = *((unaligned_f64 *) fdata);
 	fdata += 8;
-	version_no = *((int *) fdata);
+	version_no = *((unaligned_s32 *) fdata);
 	fdata += 4;
 	file_name = new char [strlen(fdata)+1];
 	strcpy (file_name, fdata);

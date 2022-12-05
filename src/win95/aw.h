@@ -19,6 +19,9 @@ typedef struct DIRECTDRAWSURFACE
 	float RecipW;
 	float RecipH;
 
+	int hasAlpha;
+	int hasChroma;
+
 	int filter;
 } DIRECTDRAWSURFACE;
 

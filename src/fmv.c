@@ -288,7 +288,7 @@ void SetupFMVTexture(FMVTEXTURE *ftPtr)
 {
 	if (ftPtr->PalettedBuf == NULL)
 	{
-		ftPtr->PalettedBuf = (unsigned char*) malloc(128*128*4);
+		ftPtr->PalettedBuf = (unsigned char*) calloc(1, 128*128+128*128*4);
 	}
 	
 	if (ftPtr->RGBBuf == NULL)
@@ -327,9 +327,10 @@ void UpdateFMVTexture(FMVTEXTURE *ftPtr)
 		unsigned char source = (*srcPtr++);
 		dstPtr[0] = ftPtr->SrcPalette[source].peRed;
 		dstPtr[1] = ftPtr->SrcPalette[source].peGreen;
-		dstPtr[2] = ftPtr->SrcPalette[source].peBlue; 
+		dstPtr[2] = ftPtr->SrcPalette[source].peBlue;
+		dstPtr[3] = 255;
 		
-		dstPtr += 3;
+		dstPtr += 4;
 	} while(--pixels);
 	
 //#warning move this into opengl.c

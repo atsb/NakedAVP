@@ -1,6 +1,8 @@
 #ifndef _stratdef_h_
 #define _stratdef_h_ 1
 
+#include "unaligned.h"
+
 #ifdef __cplusplus
 
 	extern "C" {
@@ -277,17 +279,17 @@ extern STRATEGYBLOCK *ActiveStBlockList[];
 #define COPY_NAME(name1, name2) \
 			{	\
 				GLOBALASSERT(SB_NAME_LENGTH == 8); \
-				*(int*)name1 = *(int*)name2; \
-				*((int*)name1 + 1) = *((int*)name2 + 1);\
+				*(unaligned_s32*)name1 = *(unaligned_s32*)name2; \
+				*((unaligned_s32*)name1 + 1) = *((unaligned_s32*)name2 + 1);\
 			}
 
 #define NAME_ISEQUAL(name1, name2) \
-				((*(int*)name1 == *(int*)name2) && \
-				(*(((int*)name1) + 1) == *(((int*)name2) + 1)))
+				((*(unaligned_s32*)name1 == *(unaligned_s32*)name2) && \
+				(*(((unaligned_s32*)name1) + 1) == *(((unaligned_s32*)name2) + 1)))
 				
 #define NAME_ISNULL(name1) \
-				((*(int*)name1 == '\0') && \
-				(*(((int*)name1) + 1) == '\0'))
+				((*(unaligned_s32*)name1 == '\0') && \
+				(*(((unaligned_s32*)name1) + 1) == '\0'))
 	
 
 #ifdef __cplusplus

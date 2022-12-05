@@ -56,15 +56,13 @@ I'm going to try storing the quaternions as shorts within the keyframes ,
 because there are loads of them.
 -Richard.
 */
-PACKED_PUSH
 typedef struct quat_short
 {
 	short quatx;
 	short quaty;
 	short quatz;
 	short quatw;
-} PACKED QUAT_SHORT;
-PACKED_POP
+} QUAT_SHORT;
 
 /*A couple of conversion functions */
 extern void CopyShortQuatToInt(QUAT_SHORT* qs_from,QUAT* q_to);
@@ -74,21 +72,30 @@ extern void CopyIntQuatToShort(QUAT* q_from,QUAT_SHORT* qs_to);
 #define KEYFRAME_VECTOR_SHIFT 4
 
 //make sure the keyframe structure packs as much as possible
+// packing pragmas removed to fix alignment issues.
 
-PACKED_PUSH
 typedef struct keyframe_data {
 	short Offset_x; /*Offset values may need to be scaled*/
 	short Offset_y;	/*In practice scaling should only be needed for 'placed' hierarchies*/
 	short Offset_z;
-	
+
 	/* Quats */
 	QUAT_SHORT QOrient;
+
+	/*
+	  These have been moved from the end to here
+	  to reduce padding.
+	 */
+	unsigned short Sequence_Length; /* Time between these values and the next ones. */
+	struct keyframe_data *Next_Frame; /*This is no longer Null for the last frame - look at the last_frame setting instead*/
+
 	/*
 	int oneoversinomega;
 	Removed oneoversinomega , since I can save a far amount of memory by doing so ,
 	and the value is just calculated using a lookup table anyway. -Richard
 	*/
-	int oneoversequencelength;	
+	int oneoversequencelength;
+
 	unsigned short omega:12;
 	/* Quats */
 	unsigned short slerp_to_negative_quat:1; /*Should the slerping use the negative version of the next quaternion*/
@@ -96,12 +103,7 @@ typedef struct keyframe_data {
 	unsigned short shift_offset:1; /*does offset need to be scaled*/
 
 	unsigned short last_frame:1; /*Is this the last frame?*/
-
-	unsigned short Sequence_Length; /* Time between these values and the next ones. */
-	struct keyframe_data *Next_Frame; /*This is no longer Null for the last frame - look at the last_frame setting instead*/
-} PACKED KEYFRAME_DATA;
-PACKED_POP
-
+} KEYFRAME_DATA;
 
 /*Two functions for extracting and setting the key frame offset */
 extern void GetKeyFrameOffset(KEYFRAME_DATA* frame,VECTORCH* output_vector);

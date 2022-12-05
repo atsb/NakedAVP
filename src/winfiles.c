@@ -762,10 +762,8 @@ static const char* GetGlobalDirectory(const char* argv0)
 /*
   Game-specific initialization
  */
-extern "C" {
-	extern char const *SecondTex_Directory;
-	extern char const *SecondSoundDir;
-}
+extern char const *SecondTex_Directory;
+extern char const *SecondSoundDir;
 
 void InitGameDirectories(char *argv0)
 {
