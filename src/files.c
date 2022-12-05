@@ -24,9 +24,7 @@
 #include "fixer.h"
 #include "files.h"
 
-#if defined __APPLE__
 #define GetBasePath()    SDL_GetPrefPath("", "AliensVsPredator");
-#endif
 
 static char *local_dir;
 static char *global_dir;
@@ -637,7 +635,7 @@ void InitGameDirectories(char *argv0)
 	5. current directory
 	6. macOS - Application Support directory
 	*/
-#if !defined __APPLE__
+#if !defined __APPLE__ || __linux__
 	/* 1. $AVP_DATA */
 	gamedir = getenv("AVP_DATA");
 	
@@ -705,7 +703,7 @@ void InitGameDirectories(char *argv0)
 		gamedir = ".";
 	}
 	
-#elif defined __APPLE__
+#elif defined __APPLE__ || __linux__
 		/* 6. Application Support directory */
         gamedir = I_GetUserDir();
 #endif
