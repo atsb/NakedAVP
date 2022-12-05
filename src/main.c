@@ -1332,7 +1332,8 @@ void CheckForWindowsMessages()
 
 	// a second reset of relative mouse state because
 	// enabling relative mouse mode moves the mouse
-	SDL_GetRelativeMouseState(NULL, NULL);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+        SDL_GetRelativeMouseState(NULL, NULL);
 
 	if (GotPrintScn) {
 		GotPrintScn = 0;
