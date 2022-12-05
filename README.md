@@ -1,3 +1,5 @@
+Note: I did not base it on the 2017 version as it is flawed and regularly smashes the stack on 64bit systems.  The 2015 build is a lot more stable however it is also a lot more immature.  A total SDL2 replacement needs to be done, but it at least runs.
+
 Aliens vs Predator Linux  http://icculus.org/avp/
 ------------------------
 
