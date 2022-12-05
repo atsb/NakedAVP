@@ -4,6 +4,11 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+
+#if defined __APPLE__
+#include <SDL2/SDL.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -603,15 +608,16 @@ void InitGameDirectories(char *argv0)
 	
 	SecondTex_Directory = "graphics/";
 	SecondSoundDir = "sound/";
-
-	homedir = getenv("HOME");
-	if (homedir == NULL)
-		homedir = ".";
+    
+    homedir = getenv("HOME");
+    if (homedir == NULL)
+        homedir = ".";
+    
 	localdir = (char *)malloc(strlen(homedir)+10);
 	strcpy(localdir, homedir);
 	strcat(localdir, "/");
 	strcat(localdir, ".avp");
-	
+
 	tmp = NULL;
 	
 	/*
@@ -620,8 +626,9 @@ void InitGameDirectories(char *argv0)
 	3. realpath of executable path from argv[0]
 	4. $PATH
 	5. current directory
+	6. macOS - Application Support directory
 	*/
-	
+#if !defined __APPLE__
 	/* 1. $AVP_DATA */
 	gamedir = getenv("AVP_DATA");
 	
@@ -689,6 +696,13 @@ void InitGameDirectories(char *argv0)
 		gamedir = ".";
 	}
 	
+#elif defined __APPLE__
+		if (gamedir == NULL) {
+		/* 6. Application Support directory */
+		gamedir = SDL_GetPrefPath("", "AliensVsPredator");
+	}
+#endif
+
 	assert(gamedir != NULL);
 	
 	/* last chance sanity check */
