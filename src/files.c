@@ -24,6 +24,10 @@
 #include "fixer.h"
 #include "files.h"
 
+#if defined __APPLE__
+#define GetBasePath()    SDL_GetPrefPath("", "AliensVsPredator");
+#endif
+
 static char *local_dir;
 static char *global_dir;
 
@@ -593,6 +597,11 @@ static int check_game_directory(char *dir)
 	return 1;
 }
 
+char* I_GetUserDir(void)
+{
+    return GetBasePath();
+}
+
 /*
   Game-specific initialization
  */
@@ -697,10 +706,8 @@ void InitGameDirectories(char *argv0)
 	}
 	
 #elif defined __APPLE__
-		if (gamedir == NULL) {
 		/* 6. Application Support directory */
-		gamedir = SDL_GetPrefPath("", "AliensVsPredator");
-	}
+        gamedir = I_GetUserDir();
 #endif
 
 	assert(gamedir != NULL);
