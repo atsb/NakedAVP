@@ -19,10 +19,6 @@
 #include "dynblock.h"
 #include "stratdef.h"
 
-#if defined( _MSC_VER )
-#include <AL/eax.h>
-#endif
-
 #if 0
 #define OPENAL_DEBUG
 #endif
@@ -46,17 +42,6 @@ static struct {
 	float reverb_mix;
 	unsigned int env_index;
 } SoundConfig;
-
-#if defined(_MSC_VER)
-// EAX1.0
-#define EAX_REVERBMIX_USEDISTANCE -1.0F
-
-// EAX1.0
-#define EAX_ENVIRONMENT_DEFAULT EAX_ENVIRONMENT_PLAIN
-
-EAXSet EAX_pfPropSet;
-EAXGet EAX_pfPropGet;
-#endif
 
 /* start simplistic riff wave parsing */
 #define lsb8 (buf, x)  (((unsigned int)buf[(x)+0] <<  0))
@@ -224,19 +209,6 @@ int PlatStartSoundSys()
 		fprintf(stderr, "alListenerfv() error = ...\n");
 		exit(1);
 	}
-
-#if defined(_MSC_VER)
-	EAX_pfPropSet = NULL;
-	EAX_pfPropGet = NULL;
-	
-	if( alIsExtensionPresent( (ALubyte*) "EAX" ) == AL_TRUE ) {
-		EAX_pfPropSet = alGetProcAddress( (ALubyte*) "EAXSet" );
-		EAX_pfPropGet = alGetProcAddress( (ALubyte*) "EAXGet" );
-	}
-	
-	// Set a default environment value.
-	PlatSetEnviroment(EAX_ENVIRONMENT_DEFAULT, EAX_REVERBMIX_USEDISTANCE);
-#endif
 	
 	initSources = 1;
 	
@@ -913,46 +885,6 @@ void PlatSetEnviroment(unsigned int env_index, float reverb_mix)
 {
 #ifdef OPENAL_DEBUG
 	fprintf(stderr, "OPENAL: PlatSetEnvironment(%d, %f)\n", env_index, reverb_mix);
-#endif
-
-#if defined( _MSC_VER )
-	if( SoundConfig.env_index != env_index ) {
-		
-		// TODO: support the custom plain reverb
-		if( env_index >= EAX_ENVIRONMENT_COUNT ) {
-			env_index = EAX_ENVIRONMENT_DEFAULT;
-		}
-		
-		if( EAX_pfPropSet != NULL ) {
-			ALuint ulEAXVal = env_index;
-			
-			EAX_pfPropSet(&DSPROPSETID_EAX20_ListenerProperties,
-				DSPROPERTY_EAXLISTENER_ENVIRONMENT, 0, &ulEAXVal, sizeof( ulEAXVal ) );
-
-			// how to set all parameters:
-			// EAXLISTENERPROPERTIES mystruct = { ... };
-			// EAX_pfPropSet(&DSPROPSETID_EAX_ListenerProperites,
-			//	DSPROPERTY_EAXLISTENER_ALL, 0, &mystruct, sizeof(EAXLISTENERPROPERTIES));
-		}
-		
-		SoundConfig.env_index = env_index;
-	}
-	
-	if( reverb_mix == SoundConfig.reverb_mix ) {
-		return;
-	}
-	
-	// EAX2.0: EAX_REVERBMIX_USEDISTANCE is DSPPROPERTY_EAXBUFFER_ROOMROLLOFFFACTOR?
-	// But I don't think AvP even set this in the final version.
-	
-	if( (reverb_mix < 0.0f) || (reverb_mix > 1.0f) ) {
-		// TODO: handle EAX_REVERBMIX_USEDISTANCE
-		SoundConfig.reverb_mix = EAX_REVERBMIX_USEDISTANCE;
-	} else {
-		SoundConfig.reverb_mix = reverb_mix;
-	}
-	
-	SoundConfig.reverb_changed = TRUE;
 #endif
 }
 

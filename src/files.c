@@ -1,7 +1,9 @@
 #define _BSD_SOURCE
 
 #include <assert.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,9 +12,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifndef _WIN32
 #include <dirent.h>
 #include <fnmatch.h>
-
+#endif
 #include "fixer.h"
 #include "files.h"
 
