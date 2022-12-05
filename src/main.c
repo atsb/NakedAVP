@@ -102,10 +102,10 @@ static int WantFullscreenToggle = 0;
 static int WantResolutionChange = 0;
 static int WantMouseGrab = 1;
 #else
-static int WantFullscreen = 0;
+static int WantFullscreen = 1;
 static int WantFullscreenToggle = 1;
 static int WantResolutionChange = 1;
-static int WantMouseGrab = 0;
+static int WantMouseGrab = 1;
 #endif
 
 // Additional configuration
