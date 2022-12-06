@@ -64,18 +64,18 @@ PLAYER_INPUT_CONFIGURATION AlienInputSecondaryConfig;
 #if 1 // English
 PLAYER_INPUT_CONFIGURATION DefaultMarineInputPrimaryConfig =
 {
-	KEY_UP,				// Forward;
-	KEY_DOWN,			// Backward;
+	KEY_W,				// Forward;
+	KEY_S,			    // Backward;
 	KEY_NUMPAD4, 		// Left;
 	KEY_NUMPAD6, 		// Right;
 
 	KEY_RIGHTALT,		// Strafe;
-	KEY_LEFT,	 		// StrafeLeft;
-	KEY_RIGHT,	 		// StrafeRight;
+	KEY_A,	 		    // StrafeLeft;
+	KEY_D,	 		    // StrafeRight;
 
 	KEY_Q, 				// LookUp;
 	KEY_Z, 				// LookDown;
-	KEY_A,				// CentreView;
+	KEY_G,				// CentreView;
 
 	KEY_LEFTSHIFT,		// Walk;
 	KEY_RIGHTCTRL, 		// Crouch;
@@ -101,18 +101,18 @@ PLAYER_INPUT_CONFIGURATION DefaultMarineInputPrimaryConfig =
 };
 PLAYER_INPUT_CONFIGURATION DefaultPredatorInputPrimaryConfig =
 {
-	KEY_UP,				// Forward;
-	KEY_DOWN,			// Backward;
-	KEY_NUMPAD4, 		// Left;
-	KEY_NUMPAD6, 		// Right;
+    KEY_W,              // Forward;
+    KEY_S,              // Backward;
+    KEY_NUMPAD4,        // Left;
+    KEY_NUMPAD6,        // Right;
 
-	KEY_RIGHTALT,		// Strafe;
-	KEY_LEFT,	 		// StrafeLeft;
-	KEY_RIGHT,	 		// StrafeRight;
+    KEY_RIGHTALT,       // Strafe;
+    KEY_A,              // StrafeLeft;
+    KEY_D,              // StrafeRight;
 
-	KEY_Q, 				// LookUp;
-	KEY_Z, 				// LookDown;
-	KEY_A,				// CentreView;
+    KEY_Q,              // LookUp;
+    KEY_Z,              // LookDown;
+    KEY_G,              // CentreView;
 
 	KEY_LEFTSHIFT,		// Walk;
 	KEY_RIGHTCTRL, 		// Crouch;
@@ -142,18 +142,18 @@ PLAYER_INPUT_CONFIGURATION DefaultPredatorInputPrimaryConfig =
 
 PLAYER_INPUT_CONFIGURATION DefaultAlienInputPrimaryConfig =
 {
-	KEY_UP,				// Forward;
-	KEY_DOWN,			// Backward;
-	KEY_NUMPAD4, 		// Left;
-	KEY_NUMPAD6, 		// Right;
+    KEY_W,              // Forward;
+    KEY_S,              // Backward;
+    KEY_NUMPAD4,        // Left;
+    KEY_NUMPAD6,        // Right;
 
-	KEY_RIGHTALT,		// Strafe;
-	KEY_LEFT,	 		// StrafeLeft;
-	KEY_RIGHT,	 		// StrafeRight;
+    KEY_RIGHTALT,       // Strafe;
+    KEY_A,              // StrafeLeft;
+    KEY_D,              // StrafeRight;
 
-	KEY_Q, 				// LookUp;
-	KEY_Z, 				// LookDown;
-	KEY_A,				// CentreView;
+    KEY_Q,              // LookUp;
+    KEY_Z,              // LookDown;
+    KEY_G,              // CentreView;
 
 	KEY_LEFTSHIFT,		// Walk;
 	KEY_RIGHTCTRL, 		// Crouch;
