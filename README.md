@@ -49,6 +49,11 @@ AVP_DATA environment variable to the game data directory.
 
 Local user settings are stored in ~/.avp.
 
+For GNU/Linux systems and other *NIX/BSD systems, the standard default directory is:
+/usr/local/games/AliensVsPredator
+
+This is for ease of installation and general usage/cleanliness.
+
 Part 4: Credits
 ---------------
 
