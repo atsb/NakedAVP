@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -672,7 +673,7 @@ static void setup_tex_conv_array (
 		
 		for (; !bns.done(); bns.next())
 		{
-			max_indices = max(bns().index,max_indices);
+			max_indices = std::max(bns().index,max_indices);
 		}
 		
 		conv_array = new int [max_indices+1];
@@ -1177,7 +1178,7 @@ BOOL load_rif_bitmaps (RIFFHANDLE h, int/* flags*/)
 		
 		for (; !bns.done(); bns.next())
 		{
-			h->max_index = max(bns().index,h->max_index);
+			h->max_index = std::max(bns().index,h->max_index);
 		}
 
 		if (h->tex_index_nos) delete h->tex_index_nos;
@@ -2138,7 +2139,7 @@ void SetupAnimatingShape(Shape_Chunk* sc,SHAPEHEADER* shp, Shape_Merge_Data_Chun
 	for(;!chlif.done();chlif.next())
 	{
 		Anim_Shape_Sequence_Chunk* assc=(Anim_Shape_Sequence_Chunk*)chlif();
-		numseq=max(assc->sequence_data.SequenceNum+1,numseq);
+		numseq=std::max(assc->sequence_data.SequenceNum+1,numseq);
 	}
 
 	shapeanimationheader* sah=(shapeanimationheader*)PoolAllocateMem(sizeof(shapeanimationheader));
@@ -2173,9 +2174,9 @@ void SetupAnimatingShape(Shape_Chunk* sc,SHAPEHEADER* shp, Shape_Merge_Data_Chun
 		sas->max_z=(int)((cas->max.z-Centre.z)*local_scale);
 		sas->min_z=(int)((cas->min.z-Centre.z)*local_scale);
 	
-		int x=max(-sas->min_x,sas->max_x);
-		int y=max(-sas->min_y,sas->max_y);
-		int z=max(-sas->min_z,sas->max_z);
+		int x=std::max(-sas->min_x,sas->max_x);
+		int y=std::max(-sas->min_y,sas->max_y);
+		int z=std::max(-sas->min_z,sas->max_z);
 		sas->radius=(int)sqrt((double)(x*x+y*y+z*z));
 		
 		
@@ -2609,7 +2610,7 @@ BOOL copy_sprite_to_shapeheader (RIFFHANDLE h, SHAPEHEADER *& shphd,Sprite_Heade
 		LIF<BMP_Name> bns (&blsc->bmps);
 		for (; !bns.done(); bns.next())
 		{
-			local_max_index = max(bns().index,local_max_index);
+			local_max_index = std::max(bns().index,local_max_index);
 		}
 		
 		BmpConv = new int [local_max_index+1];
@@ -2771,7 +2772,7 @@ BOOL copy_sprite_to_shapeheader (RIFFHANDLE h, SHAPEHEADER *& shphd,Sprite_Heade
 	int MaxSeq=0;
 	for(LIF<Chunk*>chlif(&chlist);!chlif.done();chlif.next())
 	{
-		MaxSeq=max(MaxSeq,((Sprite_Action_Chunk*)chlif())->Action);
+		MaxSeq=std::max(MaxSeq,((Sprite_Action_Chunk*)chlif())->Action);
 	}
 	txanimheader** thlist=(txanimheader**)PoolAllocateMem((3+MaxSeq)*sizeof(txanimheader));
 	thlist[0]=thlist[MaxSeq+2]=0;

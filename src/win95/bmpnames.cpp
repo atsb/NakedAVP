@@ -1,4 +1,6 @@
 #include <string.h>
+#include <algorithm>
+
 #include "bmpnames.hpp"
 #include "mishchnk.hpp"
 
@@ -128,7 +130,7 @@ Chunk_With_BMPs::Chunk_With_BMPs (Chunk_With_Children * parent, const char * con
 		bn.priority = d2;
 		bn.transparency_colour_union = d3;
 						
-		max_index = max (bn.index, max_index);
+		max_index = std::max(bn.index, max_index);
 	
 		bmps.add_entry (bn);
 	}

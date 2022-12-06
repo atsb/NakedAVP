@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <math.h>
 #include "unaligned.h"
 #include "chunk.hpp"
@@ -1459,7 +1460,7 @@ void Shape_Header_Chunk::prepare_for_output()
 
 	}
 
-	Shape_Chunk::max_id = max(Shape_Chunk::max_id, file_id_num);
+	Shape_Chunk::max_id = std::max(Shape_Chunk::max_id, file_id_num);
 
 // this should always be the last thing
 
@@ -1783,7 +1784,7 @@ void Shape_Morphing_Data_Chunk::prepare_for_output()
 	
 	for (; !cli.done(); cli.next())
 	{
-		max_id = max (max_id, ((Shape_Sub_Shape_Chunk *)cli())->get_header()->file_id_num);
+		max_id = std::max(max_id, ((Shape_Sub_Shape_Chunk *)cli())->get_header()->file_id_num);
 	}
 
 	for (cli.restart(); !cli.done(); cli.next())

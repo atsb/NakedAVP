@@ -97,7 +97,7 @@ void PowerCableBehaveFun(STRATEGYBLOCK* sbptr)
 				max_health=NpcData->StartingStats.Health<<ONE_FIXED_SHIFT;
 				current_health=Player->ObStrategyBlock->SBDamageBlock.Health;
 				
-				health_gained=min(pc_bhv->current_charge,max_health-current_health);
+				health_gained=min_no_const(pc_bhv->current_charge,max_health-current_health);
 
 				pc_bhv->current_charge-=health_gained;
 				Player->ObStrategyBlock->SBDamageBlock.Health+=health_gained;

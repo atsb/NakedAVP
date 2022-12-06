@@ -3461,7 +3461,7 @@ void QueenBehaviour(STRATEGYBLOCK *sbPtr)
 							else if(queenStatusPointer->current_move==QM_Climbing)
 							{
 								//need to push he player out of the way
-								Player->ObStrategyBlock->DynPtr->LinImpulse.vx=min(Player->ObStrategyBlock->DynPtr->LinImpulse.vx,-3000);
+								Player->ObStrategyBlock->DynPtr->LinImpulse.vx=min_no_const(Player->ObStrategyBlock->DynPtr->LinImpulse.vx,-3000);
 							}
 							else if(queenStatusPointer->QueenState!=QBS_Engagement &&
 							   queenStatusPointer->QueenState!=QBS_CarryingObject)
@@ -4636,7 +4636,7 @@ void HandleHangarAirlock()
 						*/
 						
 						int multiplier;
-						AirlockTimeOpen=max(AirlockTimeOpen,30*ONE_FIXED);
+						AirlockTimeOpen=max_no_const(AirlockTimeOpen,30*ONE_FIXED);
 						multiplier=MUL_FIXED(NormalFrameTime,(AirlockTimeOpen-10*ONE_FIXED)/20);
 												
 						CauseDamageToObject(sbPtr,&VacuumDamage,multiplier,NULL);
@@ -4689,7 +4689,7 @@ void HandleHangarAirlock()
 						if(impulse.vx>cur_impulse->vx)
 						{
 							cur_impulse->vx+=MUL_FIXED(impulse.vx,NormalFrameTime);
-							cur_impulse->vx=min(cur_impulse->vx,impulse.vx);
+							cur_impulse->vx=min_no_const(cur_impulse->vx,impulse.vx);
 						}
 					}
 					else
@@ -4697,7 +4697,7 @@ void HandleHangarAirlock()
 						if(impulse.vx<cur_impulse->vx)
 						{
 							cur_impulse->vx+=MUL_FIXED(impulse.vx,NormalFrameTime);
-							cur_impulse->vx=max(cur_impulse->vx,impulse.vx);
+							cur_impulse->vx=max_no_const(cur_impulse->vx,impulse.vx);
 						}
 					}
 
@@ -4706,7 +4706,7 @@ void HandleHangarAirlock()
 						if(impulse.vy>cur_impulse->vy)
 						{
 							cur_impulse->vy+=MUL_FIXED(impulse.vy,NormalFrameTime);
-							cur_impulse->vy=min(cur_impulse->vy,impulse.vy);
+							cur_impulse->vy=min_no_const(cur_impulse->vy,impulse.vy);
 						}
 					}
 					else
@@ -4714,7 +4714,7 @@ void HandleHangarAirlock()
 						if(impulse.vy<cur_impulse->vy)
 						{
 							cur_impulse->vy+=MUL_FIXED(impulse.vy,NormalFrameTime);
-							cur_impulse->vy=max(cur_impulse->vy,impulse.vy);
+							cur_impulse->vy=max_no_const(cur_impulse->vy,impulse.vy);
 						}
 					}
  
@@ -4724,7 +4724,7 @@ void HandleHangarAirlock()
 						if(impulse.vz>cur_impulse->vz)
 						{
 							cur_impulse->vz+=MUL_FIXED(impulse.vz,NormalFrameTime);
-							cur_impulse->vz=min(cur_impulse->vz,impulse.vz);
+							cur_impulse->vz=min_no_const(cur_impulse->vz,impulse.vz);
 						}
 					}
 					else
@@ -4732,7 +4732,7 @@ void HandleHangarAirlock()
 						if(impulse.vz<cur_impulse->vz)
 						{
 							cur_impulse->vz+=MUL_FIXED(impulse.vz,NormalFrameTime);
-							cur_impulse->vz=max(cur_impulse->vz,impulse.vz);
+							cur_impulse->vz=max_no_const(cur_impulse->vz,impulse.vz);
 						}
 					}
 

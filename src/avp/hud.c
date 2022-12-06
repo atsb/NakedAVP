@@ -943,12 +943,12 @@ static void DisplayHealthAndArmour(void)
 	{
 		//make sure health isn't displayed as 100 , if it is even slightly below.
 		//(ie round down 99.5 , even though health is rounded up normally)
-		health = min(health,99);
+		health = min_no_const(health,99);
 	}
 	if(PlayerStatusPtr->Armour<(NpcData->StartingStats.Armour<<16))
 	{
 		//similarly for armour
-		armour = min(armour,99);
+		armour = min_no_const(armour,99);
 	}
 	
 	Render_HealthAndArmour(health,armour);

@@ -1,15 +1,6 @@
 #ifndef INLINE_INCLUDED
 #define INLINE_INCLUDED
 
-#ifndef min
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef max
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
-
 #if SUPPORT_MMX
 #include "mmx_math.h"
 #endif

@@ -93,7 +93,7 @@ void DeathVolumeBehaveFun(STRATEGYBLOCK* vol_sbptr)
 			//now check  the object's vertical extents for overlap with the death volume bounding box
 			miny=dptr->ObWorld.vy+dptr->ObMinY;
 			maxy=dptr->ObWorld.vy+dptr->ObMaxY;
-			if(max(miny,dv_bhv->volume_min.vy) > min(maxy,dv_bhv->volume_max.vy)) continue;
+			if(max_no_const(miny,dv_bhv->volume_min.vy) > min_no_const(maxy,dv_bhv->volume_max.vy)) continue;
 
 			/*
 			if(dynPtr->Position.vx > dv_bhv->volume_min.vx &&

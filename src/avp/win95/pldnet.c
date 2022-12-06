@@ -1609,7 +1609,7 @@ void NetSendMessages(void)
 				return;
 			}
 			netGameData.sendTimer+=netGameData.sendFrequency;
-			netGameData.sendTimer=max(0,netGameData.sendTimer);
+			netGameData.sendTimer=max_no_const(0,netGameData.sendTimer);
 				
 		}
 			
@@ -2015,9 +2015,9 @@ void AddNetMsg_GameDescription(void)
 	
 		messagePtr->useSharedLives=netGameData.useSharedLives;
 		messagePtr->maxLives=netGameData.maxLives;
-		messagePtr->numDeaths[0]=(unsigned char) min(netGameData.numDeaths[0],255);
-		messagePtr->numDeaths[1]=(unsigned char) min(netGameData.numDeaths[1],255);
-		messagePtr->numDeaths[2]=(unsigned char) min(netGameData.numDeaths[2],255);
+		messagePtr->numDeaths[0]=(unsigned char) min_no_const(netGameData.numDeaths[0],255);
+		messagePtr->numDeaths[1]=(unsigned char) min_no_const(netGameData.numDeaths[1],255);
+		messagePtr->numDeaths[2]=(unsigned char) min_no_const(netGameData.numDeaths[2],255);
 
 		messagePtr->timeForRespawn=(unsigned char)netGameData.timeForRespawn;
 		messagePtr->pointsForRespawn=netGameData.pointsForRespawn;
@@ -9822,8 +9822,8 @@ static int GetDynamicScoreMultiplier(int playerKilledIndex,int killerIndex)
 	scoreFor=netGameData.playerData[playerKilledIndex].playerScore;
 	scoreAgainst=netGameData.playerData[playerKilledIndex].playerScoreAgainst;
 
-	scoreFor=max(500,scoreFor+500);
-	scoreAgainst=max(500,scoreAgainst+500);
+	scoreFor=max_no_const(500,scoreFor+500);
+	scoreAgainst=max_no_const(500,scoreAgainst+500);
 	
 	//count players
 	for(i=0;i<NET_MAXPLAYERS;i++) 	
@@ -9873,11 +9873,11 @@ static int GetDynamicScoreMultiplier(int playerKilledIndex,int killerIndex)
 
 		playerCount++;
 		//give everyone a minimum score of 500 for the purpose of this calculation
-		scoreTotal+=max(500,netGameData.playerData[i].playerScore+500);
+		scoreTotal+=max_no_const(500,netGameData.playerData[i].playerScore+500);
 	}
 	if(playerCount<3 || !scoreTotal) return ONE_FIXED;
 
-	playerKilledScore=max(500,netGameData.playerData[playerKilledIndex].playerScore+500);
+	playerKilledScore=max_no_const(500,netGameData.playerData[playerKilledIndex].playerScore+500);
 
 	//get average score of all players other than killed player
 	playerCount--;
@@ -10533,11 +10533,11 @@ int DetermineAvailableCharacterTypes(BOOL ConsiderUsedCharacters)
 	//make sure all the limits are at least 0
 	for(i=0;i<NUM_PC_TYPES;i++)
 	{
-		CharacterTypesAvailable[i]=max(0,CharacterTypesAvailable[i]);
+		CharacterTypesAvailable[i]=max_no_const(0,CharacterTypesAvailable[i]);
 	}
 	for(i=0;i<NUM_PC_SUBTYPES;i++)
 	{
-		CharacterSubTypesAvailable[i]=max(0,CharacterSubTypesAvailable[i]);
+		CharacterSubTypesAvailable[i]=max_no_const(0,CharacterSubTypesAvailable[i]);
 	}
 
 
@@ -10547,10 +10547,10 @@ int DetermineAvailableCharacterTypes(BOOL ConsiderUsedCharacters)
 	maxMarines=0;
 	for(i=0;i<NUM_PC_SUBTYPES;i++)
 	{
-		CharacterSubTypesAvailable[i]=min(CharacterSubTypesAvailable[i],CharacterTypesAvailable[NGCT_Marine]);	
+		CharacterSubTypesAvailable[i]=min_no_const(CharacterSubTypesAvailable[i],CharacterTypesAvailable[NGCT_Marine]);	
 		maxMarines+=CharacterSubTypesAvailable[i];
 	}
-	CharacterTypesAvailable[NGCT_Marine]=min(CharacterTypesAvailable[NGCT_Marine],maxMarines);
+	CharacterTypesAvailable[NGCT_Marine]=min_no_const(CharacterTypesAvailable[NGCT_Marine],maxMarines);
 
 	//return the total number of players available
 	return CharacterTypesAvailable[NGCT_Marine]+

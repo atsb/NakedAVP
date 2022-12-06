@@ -10,6 +10,7 @@
 #include <tchar.h>
 #include <mbstring.h>
 #include <inttypes.h>
+
 #define Yes 1 // sigh
 #define No 0 // sigh
 
@@ -46,14 +47,14 @@ extern "C" {
 #define PACKED_POP
 #define PACKED __attribute__((packed))
 
-/* windows junk */
-#ifndef min
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#endif
+/* ATSB: this was allowed in 1999, but not in 2022.
+* non-const std::max / std::min is invalid.
+* so lets hack around the few ones that cannot be converted to 
+std; or for the C files, so they don't conflict with the C++ definitions.
+*/
 
-#ifndef max
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#endif
+#define max_no_const(a,b) ((a)>(b)?(a):(b))
+#define min_no_const(a,b) ((a)<(b)?(a):(b))
 
 #define __cdecl
 

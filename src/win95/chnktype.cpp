@@ -1,4 +1,5 @@
 #include "chunk.hpp"
+#include <algorithm>
 #include <math.h>
 #include "chnktype.hpp"
 
@@ -1044,17 +1045,17 @@ void ChunkAnimSequence::UpdateNormalsAndExtents(ChunkShape const * cs,List<int>*
 		for (int j=0; j<caf->num_verts; j++)
 		{
 			if(vert_in_bb && !vert_in_bb[j]) continue;
-			max.x = max(max.x, caf->v_list[j].x);
-			max.y = max(max.y, caf->v_list[j].y);
-			max.z = max(max.z, caf->v_list[j].z);
+			max.x = std::max(max.x, caf->v_list[j].x);
+			max.y = std::max(max.y, caf->v_list[j].y);
+			max.z = std::max(max.z, caf->v_list[j].z);
 
-			min.x = min(min.x, caf->v_list[j].x);
-			min.y = min(min.y, caf->v_list[j].y);
-			min.z = min(min.z, caf->v_list[j].z);
+			min.x = std::min(min.x, caf->v_list[j].x);
+			min.y = std::min(min.y, caf->v_list[j].y);
+			min.z = std::min(min.z, caf->v_list[j].z);
 			
 			double temp_rad = mod(caf->v_list[j]);
 			
-			radius = max (radius, (float)temp_rad);
+			radius = std::max(radius, (float)temp_rad);
 		}
 	}
 	if(vert_in_bb) delete [] vert_in_bb;

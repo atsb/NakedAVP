@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "chunk.hpp"
 #include "chnktype.hpp"
 #include "mishchnk.hpp"
@@ -625,7 +626,7 @@ void File_Chunk::post_input_processing()
 	LIF<Shape_Chunk *> sli(&shplist);
 	for (; !sli.done(); sli.next())
 	{
-		Shape_Chunk::max_id = max (Shape_Chunk::max_id,sli()->get_header()->file_id_num);	
+		Shape_Chunk::max_id = std::max(Shape_Chunk::max_id,sli()->get_header()->file_id_num);	
 	}
 	Shape_Chunk** shape_array=new Shape_Chunk*[Shape_Chunk::max_id+1];
 
@@ -803,7 +804,7 @@ BOOL File_Chunk::check_file()
 
 
 			// Here we update max_id
-			Shape_Chunk::max_id = max (Shape_Chunk::max_id,id);	
+			Shape_Chunk::max_id = std::max(Shape_Chunk::max_id,id);	
 
 			// go to version number
 			SetFilePointer(rif_file,shphead.first_entry() + 100,0,FILE_BEGIN);
@@ -1515,7 +1516,7 @@ void File_Chunk::build_object_array()
 	//find the highest object index
 	for(oblif.restart();!oblif.done();oblif.next())
 	{
-		object_array_size=max(object_array_size,oblif()->object_data.index_num+1);
+		object_array_size=std::max(object_array_size,oblif()->object_data.index_num+1);
 	}
 
 	if(object_array_size<=0) return;
@@ -1864,7 +1865,7 @@ void RIF_File_Chunk::post_input_processing()
 
 	for (LIF<Shape_Chunk *> sli(&shplist); !sli.done(); sli.next())
 	{
-		Shape_Chunk::max_id = max (Shape_Chunk::max_id,sli()->get_header()->file_id_num);	
+		Shape_Chunk::max_id = std::max(Shape_Chunk::max_id,sli()->get_header()->file_id_num);	
 	}
 
 	Chunk_With_Children::post_input_processing();	

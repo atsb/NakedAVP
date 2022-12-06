@@ -1,6 +1,7 @@
 #define DB_LEVEL 1
 
 #include <stdlib.h>
+#include <algorithm>
 
 #include "list_tem.hpp"
 #include "chnkload.hpp"
@@ -956,7 +957,7 @@ void add_placed_hierarchy(Placed_Hierarchy_Chunk* phc,const char* fname,const ch
 	for(; !chlif.done(); chlif.next())
 	{
 		Indexed_Sound_Chunk* isc=(Indexed_Sound_Chunk*)chlif();
-		phtt->num_sounds=max(phtt->num_sounds,isc->index+1);
+		phtt->num_sounds=std::max(phtt->num_sounds,isc->index+1);
 	}
 
 	if(phtt->num_sounds)
@@ -990,7 +991,7 @@ void add_placed_hierarchy(Placed_Hierarchy_Chunk* phc,const char* fname,const ch
 	for(chlif.restart();!chlif.done();chlif.next())
 	{
 		Placed_Hierarchy_Sequence_Chunk* phsc=(Placed_Hierarchy_Sequence_Chunk*)chlif();
-		phtt->num_sequences=max(phtt->num_sequences,phsc->index+1);
+		phtt->num_sequences=std::max(phtt->num_sequences,phsc->index+1);
 	}
 
 	GLOBALASSERT(phtt->num_sequences);
@@ -1777,11 +1778,11 @@ static void add_placed_light(Object_Chunk* ob,int list_pos,AVP_Strategy_Chunk* a
 	pltd->colour_diff_green-=pltd->colour_green;
 	pltd->colour_diff_blue-=pltd->colour_blue;
 
-	pltd->fade_up_time=(max(lchunk->light.fade_up_time,1)*ONE_FIXED)/1000;
-	pltd->fade_down_time=(max(lchunk->light.fade_down_time,1)*ONE_FIXED)/1000;
-	pltd->up_time=(max(lchunk->light.up_time,1)*ONE_FIXED)/1000;
-	pltd->down_time=(max(lchunk->light.down_time,1)*ONE_FIXED)/1000;
-	pltd->timer=(max(lchunk->light.start_time,1)*ONE_FIXED)/1000;
+	pltd->fade_up_time=(std::max(lchunk->light.fade_up_time,1)*ONE_FIXED)/1000;
+	pltd->fade_down_time=(std::max(lchunk->light.fade_down_time,1)*ONE_FIXED)/1000;
+	pltd->up_time=(std::max(lchunk->light.up_time,1)*ONE_FIXED)/1000;
+	pltd->down_time=(std::max(lchunk->light.down_time,1)*ONE_FIXED)/1000;
+	pltd->timer=(std::max(lchunk->light.start_time,1)*ONE_FIXED)/1000;
 
 	pltd->type=(LIGHT_TYPE)lchunk->light.light_type;
 	pltd->on_off_type=(LIGHT_ON_OFF_TYPE)lchunk->light.on_off_type;
@@ -3808,7 +3809,7 @@ void setup_particle_generators(Environment_Data_Chunk * envd)
 		if(data_chunk->type==PARGEN_TYPE_SPARK)
 			part_temp->frequency=(data_chunk->time*ONE_FIXED)/10;
 		else
-			part_temp->frequency=ONE_FIXED/max(data_chunk->quantity,1);
+			part_temp->frequency=ONE_FIXED/max_no_const(data_chunk->quantity,1);
 
 		part_temp->active=!(data_chunk->flags & ParticleGeneratorFlag_Inactive);
 

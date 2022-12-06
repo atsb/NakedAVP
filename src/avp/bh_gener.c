@@ -156,8 +156,8 @@ void GeneratorBehaviour(STRATEGYBLOCK *sbPtr)
 		{
 			genBlock->RateIncreaseTimer=ONE_FIXED*60;
 			genBlock->GenerationRate+=genBlock->GenerationRateIncrease;
-			genBlock->GenerationRate=min(genBlock->GenerationRate,GENSPERMINUTE_MAX*100);
-			genBlock->GenerationRate=max(genBlock->GenerationRate,GENSPERMINUTE_MIN*100);
+			genBlock->GenerationRate=min_no_const(genBlock->GenerationRate,GENSPERMINUTE_MAX*100);
+			genBlock->GenerationRate=max_no_const(genBlock->GenerationRate,GENSPERMINUTE_MIN*100);
 		}
 	}
 		
@@ -1171,11 +1171,11 @@ static int GeneratorBalance_LocalLimit(int normal_limit)
 	}
 	else
 	{
-		int shift = min(GeneratorBalance.MaxAIShift,4);
+		int shift = min_no_const(GeneratorBalance.MaxAIShift,4);
 		int limit = GeneratorBalance.MaxOwnSettingNpc + shift;
 		int	alien_shortfall = limit - NumGeneratorNPCsInEnv();
 		
-		return(normal_limit + min(alien_shortfall,shift));
+		return(normal_limit + min_no_const(alien_shortfall,shift));
 		
 	}
 }

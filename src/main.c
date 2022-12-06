@@ -670,7 +670,7 @@ static void load_opengl_library(const char *lib)
 	while (lib != NULL && *lib) {
 		len = strcspn(lib, ":");
 		
-		copylen = min(len, PATH_MAX-1);
+		copylen = min_no_const(len, PATH_MAX-1);
 		
 		strncpy(tmppath, lib, copylen);
 		tmppath[copylen] = 0;

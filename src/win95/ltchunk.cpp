@@ -1,5 +1,5 @@
 #include "chunk.hpp"
-
+#include <algorithm>
 #include "ltchunk.hpp"
 
 
@@ -331,8 +331,8 @@ int Light_Scale_Chunk::ApplyPrelightScale(int l)
 	l+=(prelight_add-prelight_multiply_above);
 	l= (int)(l*prelight_multiply);
 	l+=prelight_multiply_above;
-	l=min(l,255);
-	return max(l,prelight_multiply_above);
+	l=std::min(l,255);
+	return std::max(l,prelight_multiply_above);
 }
 int Light_Scale_Chunk::ApplyRuntimeScale(int l)
 {
@@ -340,8 +340,8 @@ int Light_Scale_Chunk::ApplyRuntimeScale(int l)
 	l+=(runtime_add-runtime_multiply_above);
 	l=(int)( l*runtime_multiply);
 	l+=runtime_multiply_above;
-	l=min(l,255);
-	return max(l,runtime_multiply_above);
+	l=std::min(l,255);
+	return std::max(l,runtime_multiply_above);
 }
 ////////////////////////////////////////////////////////////////////////////////////
 RIF_IMPLEMENT_DYNCREATE("PLOBJLIT",Placed_Object_Light_Chunk)

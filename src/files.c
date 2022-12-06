@@ -682,7 +682,7 @@ void InitGameDirectories(char *argv0)
 			while (*path) {
 				len = strcspn(path, ":");
 				
-				copylen = min(len, PATH_MAX-1);
+				copylen = min_no_const(len, PATH_MAX-1);
 				
 				strncpy(tmppath, path, copylen);
 				tmppath[copylen] = 0;

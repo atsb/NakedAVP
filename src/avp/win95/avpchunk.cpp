@@ -1,5 +1,7 @@
 #include "avpchunk.hpp"
 #include "md5.h"
+#include <algorithm>
+
 //#include "strachnk.hpp"
 //#include "obchunk.hpp"
 
@@ -280,7 +282,7 @@ AVP_Generator_Extended_Settings_Chunk::AVP_Generator_Extended_Settings_Chunk(Chu
 	CHUNK_EXTRACT(spare2,int)
     	
 	
-	size_t size=max(*(int*) data,(int)sizeof(AVP_Generator_Weighting));
+	size_t size=std::max(*(int*) data,(int)sizeof(AVP_Generator_Weighting));
 
 	weights=(AVP_Generator_Weighting*)new unsigned char[size];
 	memset(weights,0,sizeof(AVP_Generator_Weighting));
@@ -551,7 +553,7 @@ RIF_IMPLEMENT_DYNCREATE("AVPENVIR",AVP_Environment_Settings_Chunk)
 AVP_Environment_Settings_Chunk::AVP_Environment_Settings_Chunk(Chunk_With_Children* parent,const char* data,size_t data_size)
 :Chunk(parent,"AVPENVIR")
 {
-	size_t size=max(data_size,sizeof(AVP_Environment_Settings));
+	size_t size=std::max(data_size,sizeof(AVP_Environment_Settings));
 
 	settings=(AVP_Environment_Settings*)new unsigned char[size];
 	memcpy(settings,data,data_size);
@@ -642,7 +644,7 @@ AVP_Decal_Chunk::AVP_Decal_Chunk(Chunk_With_Children* parent,const char* data,si
 	int loaded_decal_size=*(int*)data;
 	data+=4;
 
-	decal_size=max(loaded_decal_size,(int)sizeof(AVP_Decal));
+	decal_size=std::max(loaded_decal_size,(int)sizeof(AVP_Decal));
 
 	//allocate buffer for decals , and initialise to zero
 	decal_buffer=new char[num_decals*decal_size];
