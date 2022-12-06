@@ -708,7 +708,7 @@ void InitGameDirectories(char *argv0)
         gamedir = I_GetUserDir();
 #endif
 
-#ifndef __APPLE__ && !defined __WIN32
+#if !defined __APPLE__ && !defined __WIN32
 	gamedir = "/usr/local/games/AliensVsPredator/";
 #endif
 

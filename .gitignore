@@ -1,6 +1,11 @@
 # Prerequisites
 *.d
 
+# macOS
+*.DS_Store
+Build/.*
+Build/
+
 # Object files
 *.o
 *.ko
@@ -50,3 +55,4 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+.DS_Store
