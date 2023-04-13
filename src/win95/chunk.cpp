@@ -28,29 +28,29 @@ void list_chunks_in_file(List<int> * pList, HANDLE hand, char const * chunk_id)
 	// assuming we start at the front of a parent chunk, 
 	// containing the child chunk specified
 
-	int init_file_pos = SetFilePointer (hand,0,0,FILE_CURRENT);
+	int init_file_pos = AVPSetFilePointer (hand,0,0,FILE_CURRENT);
 	int file_pos;
-	int file_length = GetFileSize(hand, 0);
+	int file_length = AVPGetFileSize(hand, 0);
 
-	SetFilePointer (hand,8,0,FILE_CURRENT);
+    AVPSetFilePointer (hand,8,0,FILE_CURRENT);
 
 	int chunk_length;
 	int sub_chunk_ln;
 
-	ReadFile (hand, (long *) &chunk_length, 4, &bytes_read, 0);
+    AVPReadFile (hand, (long *) &chunk_length, 4, &bytes_read, 0);
 
 	if ((init_file_pos + chunk_length) > file_length) return;
 
-	while ((file_pos = SetFilePointer (hand,0,0,FILE_CURRENT))
+	while ((file_pos = AVPSetFilePointer (hand,0,0,FILE_CURRENT))
 					< (init_file_pos + chunk_length)  && ok) {
 
-		ok = ReadFile (hand, (long *) buffer, 8, &bytes_read, 0);
+		ok = AVPReadFile (hand, (long *) buffer, 8, &bytes_read, 0);
 		if (strncmp(buffer, chunk_id, 8) == 0)
 			pList->add_entry(file_pos);
 
-		ok = ReadFile (hand, (long *) &sub_chunk_ln, 4, &bytes_read, 0);
+		ok = AVPReadFile (hand, (long *) &sub_chunk_ln, 4, &bytes_read, 0);
 
-		SetFilePointer (hand,sub_chunk_ln-12,0,FILE_CURRENT);
+        AVPSetFilePointer (hand,sub_chunk_ln-12,0,FILE_CURRENT);
 	}
 }
 
@@ -121,7 +121,7 @@ BOOL Chunk::output_chunk (HANDLE & hand)
 
 	if (data_block)
 	{
-		ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+		ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 		delete [] data_block;
 
 		if (!ok) return FALSE;
@@ -279,11 +279,11 @@ BOOL Chunk_With_Children::output_chunk (HANDLE &hand)
 	Chunk * child_ptr = children;
 	BOOL ok;
 
-	ok = WriteFile (hand, (long *) identifier, 8, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) identifier, 8, &junk, 0);
 
 	if (!ok) return FALSE;
 
-	ok = WriteFile (hand, (long *) &chunk_size, 4, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) &chunk_size, 4, &junk, 0);
 
 	if (!ok) return FALSE;
 	

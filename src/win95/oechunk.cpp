@@ -131,7 +131,7 @@ BOOL Map_Block_Chunk::output_chunk(HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -148,7 +148,7 @@ BOOL Strategy_Chunk::output_chunk(HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
