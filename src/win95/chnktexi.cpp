@@ -30,7 +30,11 @@
 #include "chnktexi.h"
 
 #if !defined(NDEBUG) && defined(_CPPRTTI)
+#ifdef _WIN32
+	#include <typeinfo>
+#else
 	#include <typeinfo.h>
+#endif
 #else
 	#define dynamic_cast static_cast
 #endif

@@ -11,6 +11,15 @@
 #include <mbstring.h>
 #include <inttypes.h>
 
+/* ATSB: this was allowed in 1999, but not in 2022.
+* non-const std::max / std::min is invalid.
+* so lets hack around the few ones that cannot be converted to
+std; or for the C files, so they don't conflict with the C++ definitions.
+*/
+
+#define max_no_const(a,b) ((a)>(b)?(a):(b))
+#define min_no_const(a,b) ((a)<(b)?(a):(b))
+
 #define Yes 1 // sigh
 #define No 0 // sigh
 
@@ -79,7 +88,7 @@ std; or for the C files, so they don't conflict with the C++ definitions.
 
 #define __inline    inline
 
-size_t _mbclen(const unsigned char *s);
+size_t _AVPmbclen(const unsigned char *s);
 
 #define RGBA_MAKE(r, g, b, a)   ((((a) << 24) | ((r) << 16) | ((g) << 8) | (b)))
 
@@ -154,23 +163,23 @@ typedef unsigned __int64 uint64_t;
 #define FILE_ATTRIBUTE_NORMAL		0x2000
 
 
-HANDLE CreateFile(const char *file, int write, int x, int y, int flags, int flags2, int z);
-HANDLE CreateFileA(const char *file, int write, int x, int y, int flags, int flags2, int z);
-int WriteFile(HANDLE file, const void *data, int len, /* unsigned long */ void *byteswritten, int x);
-int ReadFile(HANDLE file, void *data, int len, /* unsigned long */ void *bytesread, int x);
-int GetFileSize(HANDLE file, int x);
-int CloseHandle(HANDLE file);
-int DeleteFile(const char *file);
-int DeleteFileA(const char *file);
-int GetDiskFreeSpace(int x, unsigned long *a, unsigned long *b, unsigned long *c, unsigned long *d);
-int CreateDirectory(char *dir, int x);
-int MoveFile(const char *newfile, const char *oldfile);
-int MoveFileA(const char *newfile, const char *oldfile);
-int CopyFile(const char *newfile, const char *oldfile, int x);
-int GetFileAttributes(const char *file);
-int GetFileAttributesA(const char *file);
-unsigned int SetFilePointer(HANDLE file, int x, int y, int z);
-int SetEndOfFile(HANDLE file);
+HANDLE AVPCreateFile(const char *file, int write, int x, int y, int flags, int flags2, int z);
+HANDLE AVPCreateFileA(const char *file, int write, int x, int y, int flags, int flags2, int z);
+int AVPWriteFile(HANDLE file, const void *data, int len, /* unsigned long */ void *byteswritten, int x);
+int AVPReadFile(HANDLE file, void *data, int len, /* unsigned long */ void *bytesread, int x);
+int AVPGetFileSize(HANDLE file, int x);
+int AVPCloseHandle(HANDLE file);
+int AVPDeleteFile(const char *file);
+int AVPDeleteFileA(const char *file);
+int AVPGetDiskFreeSpace(int x, unsigned long *a, unsigned long *b, unsigned long *c, unsigned long *d);
+int AVPCreateDirectory(char *dir, int x);
+int AVPMoveFile(const char *newfile, const char *oldfile);
+int AVPMoveFileA(const char *newfile, const char *oldfile);
+int AVPCopyFile(const char *newfile, const char *oldfile, int x);
+int AVPGetFileAttributes(const char *file);
+int AVPGetFileAttributesA(const char *file);
+unsigned int AVPSetFilePointer(HANDLE file, int x, int y, int z);
+int AVPSetEndOfFile(HANDLE file);
 
 unsigned int timeGetTime();
 unsigned int GetTickCount();

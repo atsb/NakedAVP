@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#define NOMINMAX 
+#endif
+
 #include "avpchunk.hpp"
 #include "md5.h"
 #include <algorithm>

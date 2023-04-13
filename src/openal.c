@@ -842,7 +842,6 @@ void PlatUpdatePlayer()
 			or[5] = -(float) ((Global_VDB_Ptr->VDB_Mat.mat32) / 65536.0F);
 		}
 
-#warning VELOCITY AND/OR OPENAL SETUP IS IN WRONG UNITS
 		static int useVel = 0;
 		if (useVel!=0&&(AvP.PlayerType == I_Alien && DopplerShiftIsOn && NormalFrameTime)) {
 			DYNAMICSBLOCK *dynPtr = Player->ObStrategyBlock->DynPtr;

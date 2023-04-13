@@ -1,15 +1,15 @@
+#ifdef _WIN32
+#define NOMINMAX 
+#endif
+
 #include <algorithm>
 #include "chunk.hpp"
 #include "chnktype.hpp"
 #include "mishchnk.hpp"
-
 #include "shpchunk.hpp"
 #include "obchunk.hpp"
-
-
-
 #include "huffman.hpp"
-
+#include "fixer.h"
 
 // Class Lockable_Chunk_With_Children functions
 
@@ -526,7 +526,11 @@ BOOL File_Chunk::write_file (const char * fname)
 			filename_start_pos=pos+1;
 		}
 		//go to next MBCS character in string
+#ifdef _WIN32
 		pos+=_mbclen((unsigned const char*)&fname[pos]);
+#else
+		pos += _AVPmbclen((unsigned const char*)&fname[pos]);
+#endif
 	}
 	if(!fname[filename_start_pos]) return FALSE;
 	

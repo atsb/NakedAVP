@@ -23,7 +23,11 @@
 #include "awtexld.hpp"
 
 #ifdef _CPPRTTI
+#ifdef _WIN32
+	#include <typeinfo>
+#else
 	#include <typeinfo.h>
+#endif
 #endif
 
 /* awTexLd.cpp - Author: Jake Hotson */

@@ -1,5 +1,9 @@
 #define DB_LEVEL 1
 
+#ifdef _WIN32
+#define NOMINMAX 
+#endif
+
 #include <stdlib.h>
 #include <algorithm>
 

@@ -1,8 +1,19 @@
 #define _BSD_SOURCE
 
 #include <assert.h>
+
 #ifndef _WIN32
 #include <unistd.h>
+#include <dirent.h>
+#include <fnmatch.h>
+#endif
+
+#ifdef _WIN32
+#include <direct.h>
+#include <shlwapi.h>
+#include "win32/dirent.h"
+#define R_OK 0
+#define W_OK 0
 #endif
 
 #if defined __APPLE__
@@ -17,10 +28,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef _WIN32
-#include <dirent.h>
-#include <fnmatch.h>
-#endif
 #include "fixer.h"
 #include "files.h"
 
@@ -44,7 +51,12 @@ int SetGameDirectories(const char *local, const char *global)
 	if (stat(local_dir, &buf) == -1) {
 		printf("Creating local directory %s...\n", local_dir);
 		
+#ifdef _WIN32
+		_mkdir(local_dir);
+#else
 		mkdir(local_dir, S_IRWXU);
+#endif
+		
 	}
 	
 	return 0;
@@ -364,12 +376,20 @@ int CreateGameDirectory(const char *dirname)
 	int ret;
 
 	rfilename = FixFilename(dirname, local_dir, 0);
+#ifdef _WIN32
+	ret = _mkdir(rfilename);
+#else
 	ret = mkdir(rfilename, S_IRWXU);
+#endif
 	free(rfilename);
 	
 	if (ret == -1) {
 		rfilename = FixFilename(dirname, local_dir, 1);
+#ifdef _WIN32
+		ret = _mkdir(rfilename);
+#else
 		ret = mkdir(rfilename, S_IRWXU);
+#endif
 		free(rfilename);
 	}
 	
@@ -481,7 +501,11 @@ GameDirectoryFile *ScanGameDirectory(void *dir)
 	
 	if (directory->globaldir) {
 		while ((file = readdir(directory->globaldir)) != NULL) {
+#ifdef _WIN32
+			if (PathMatchSpec(directory->pat, file->d_name) == 0) {
+#else
 			if (fnmatch(directory->pat, file->d_name, FNM_PATHNAME) == 0) {
+#endif
 				ptr = FixFilename(file->d_name, directory->globaldirname, 0);
 				directory->tmp.attr = GetFA(ptr);
 				free(ptr);
@@ -500,7 +524,11 @@ GameDirectoryFile *ScanGameDirectory(void *dir)
 	
 	if (directory->localdir) {
 		while ((file = readdir(directory->localdir)) != NULL) {
+#ifdef _WIN32
+			if (PathMatchSpec(directory->pat, file->d_name) == 0) {
+#else
 			if (fnmatch(directory->pat, file->d_name, FNM_PATHNAME) == 0) {
+#endif
 				ptr = FixFilename(file->d_name, directory->localdirname, 0);
 				directory->tmp.attr = GetFA(ptr);
 				directory->tmp.timestamp = GetTS(ptr);
@@ -668,8 +696,11 @@ void InitGameDirectories(char *argv0)
 		
 		assert(tmp != NULL);
 
+#ifdef _WIN32
+		gamedir = tmp;
+#else
 		gamedir = realpath(tmp, tmppath);
-
+#endif
 		if (!check_game_directory(gamedir)) {
 			gamedir = NULL;
 		}
@@ -708,8 +739,12 @@ void InitGameDirectories(char *argv0)
         gamedir = I_GetUserDir();
 #endif
 
-#if !defined __APPLE__ && !defined __WIN32
+#if define __linux__
 	gamedir = "/usr/local/games/AliensVsPredator/";
+#endif
+
+#if defined _WIN32
+	gamedir = ".";
 #endif
 
 	assert(gamedir != NULL);

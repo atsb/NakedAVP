@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#define NOMINMAX 
+#endif
+
 #include "chunk.hpp"
 #include <algorithm>
 #include <math.h>

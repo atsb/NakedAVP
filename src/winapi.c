@@ -1,4 +1,13 @@
+#ifndef _WIN32
 #include <unistd.h>
+#include <sys/time.h>
+#endif
+
+#ifdef _WIN32
+#include <Windows.h>
+#include <direct.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,16 +15,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/time.h>
-
 #include "fixer.h"
 
-size_t _mbclen(const unsigned char *s)
+size_t _AVPmbclen(const unsigned char *s)
 {
 	return strlen((const char *)s);
 }
 
-HANDLE CreateFile(const char *file, int mode, int x, int y, int flags, int flags2, int z)
+HANDLE AVPCreateFile(const char *file, int mode, int x, int y, int flags, int flags2, int z)
 {
 	int fd;
 	
@@ -38,7 +45,11 @@ HANDLE CreateFile(const char *file, int mode, int x, int y, int flags, int flags
 				fprintf(stderr, "CreateFile: GENERIC_WRITE flags = %d\n", flags);
 				exit(EXIT_FAILURE);
 			}
+#ifdef _WIN32
+			fd = open(file, O_WRONLY | O_TRUNC | O_CREAT);
+#else
 			fd = open(file, O_WRONLY|O_TRUNC|O_CREAT, S_IRUSR|S_IWUSR);
+#endif
 			if (fd == -1) {
 				perror("CreateFile");
 				return INVALID_HANDLE_VALUE;
@@ -53,12 +64,12 @@ HANDLE CreateFile(const char *file, int mode, int x, int y, int flags, int flags
 	return (HANDLE)fd;
 }
 
-HANDLE CreateFileA(const char *file, int write, int x, int y, int flags, int flags2, int z)
+HANDLE AVPCreateFileA(const char *file, int write, int x, int y, int flags, int flags2, int z)
 {
-	return CreateFile(file, write, x, y, flags, flags2, z);
+	return AVPCreateFile(file, write, x, y, flags, flags2, z);
 }
 
-int WriteFile(HANDLE file, const void *data, int len, void *byteswritten, int lpOverlapped)
+int AVPWriteFile(HANDLE file, const void *data, int len, void *byteswritten, int lpOverlapped)
 {
 	unsigned long *bw, i;
 	
@@ -76,7 +87,7 @@ int WriteFile(HANDLE file, const void *data, int len, void *byteswritten, int lp
 	}
 }
 
-int ReadFile(HANDLE file, void *data, int len, void *bytesread, int lpOverlapped)
+int AVPReadFile(HANDLE file, void *data, int len, void *bytesread, int lpOverlapped)
 {
 	unsigned long *br, i;
 	
@@ -94,7 +105,7 @@ int ReadFile(HANDLE file, void *data, int len, void *bytesread, int lpOverlapped
 	}
 }
 
-int GetFileSize(HANDLE file, int lpFileSizeHigh)
+int AVPGetFileSize(HANDLE file, int lpFileSizeHigh)
 {
 	struct stat buf;
 	
@@ -105,7 +116,7 @@ int GetFileSize(HANDLE file, int lpFileSizeHigh)
 	return buf.st_size;
 }
 
-int CloseHandle(HANDLE file)
+int AVPCloseHandle(HANDLE file)
 {
 
 	fprintf(stderr, "CloseHandle(%d)\n", file);
@@ -118,7 +129,7 @@ int CloseHandle(HANDLE file)
 	return 0;
 }
 
-int DeleteFile(const char *file)
+int AVPDeleteFile(const char *file)
 {
 
 	fprintf(stderr, "DeleteFile(%s)\n", file);
@@ -129,74 +140,79 @@ int DeleteFile(const char *file)
 		return 1;
 }
 
-int DeleteFileA(const char *file)
+int AVPDeleteFileA(const char *file)
 {
-	return DeleteFile(file);
+	return AVPDeleteFile(file);
 }
 
-int GetDiskFreeSpace(int x, unsigned long *a, unsigned long *b, unsigned long *c, unsigned long *d)
+int AVPGetDiskFreeSpace(int x, unsigned long *a, unsigned long *b, unsigned long *c, unsigned long *d)
 {
 	fprintf(stderr, "GetDiskFreeSpace(%d, %p, %p, %p, %p)\n", x, a, b, c, d);
 
 	return 0;
 }
 
-int CreateDirectory(char *dir, int lpSecurityAttributes)
+int AVPCreateDirectory(char *dir, int lpSecurityAttributes)
 {
 
 	fprintf(stderr, "CreateDirectory(%s, %d)\n", dir, lpSecurityAttributes);
 
+#ifdef _WIN32
+	if (_mkdir(dir) == -1)
+#else
 	if (mkdir(dir, S_IRWXU) == -1)
+#endif
 		return 0;
 	else
 		return 1;
 }
 
-int MoveFile(const char *newfile, const char *oldfile)
+int AVPMoveFile(const char *newfile, const char *oldfile)
 {
 	fprintf(stderr, "MoveFile(%s, %s)\n", newfile, oldfile);
 	
 	return 0;
 }
 
-int MoveFileA(const char *newfile, const char *oldfile)
+int AVPMoveFileA(const char *newfile, const char *oldfile)
 {
-	return MoveFile(newfile, oldfile);
+	return AVPMoveFile(newfile, oldfile);
 }
 
-int CopyFile(const char *newfile, const char *oldfile, int x)
+int AVPCopyFile(const char *newfile, const char *oldfile, int x)
 {
 	fprintf(stderr, "CopyFile(%s, %s, %d)\n", newfile, oldfile, x);
 	
 	return 0;
 }
 
-int GetFileAttributes(const char *file)
+int AVPGetFileAttributes(const char *file)
 {
 	fprintf(stderr, "GetFileAttributes(%s)\n", file);
 	
 	return 0;
 }
 
-int GetFileAttributesA(const char *file)
+int AVPGetFileAttributesA(const char *file)
 {
-	return GetFileAttributes(file);
+	return AVPGetFileAttributes(file);
 }
 
-unsigned int SetFilePointer(HANDLE file, int x, int y, int z)
+unsigned int AVPSetFilePointer(HANDLE file, int x, int y, int z)
 {
 	fprintf(stderr, "SetFilePointer(%d, %d, %d, %d)\n", file, x, y, z);
 	
 	return 0;
 }
 
-int SetEndOfFile(HANDLE file)
+int AVPSetEndOfFile(HANDLE file)
 {
 	fprintf(stderr, "SetEndOfFile(%d)\n", file);
 	
 	return 0;
 }
 
+#ifndef _WIN32
 /* time in miliseconds */
 unsigned int timeGetTime()
 {
@@ -226,3 +242,4 @@ unsigned int GetTickCount()
 {
 	return timeGetTime();
 }
+#endif
