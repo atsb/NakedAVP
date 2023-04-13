@@ -62,8 +62,8 @@ int LoadGameRequest = SAVELOAD_REQUEST_NONE; //slot number of game to be loaded
 int SaveGameRequest = SAVELOAD_REQUEST_NONE; //slot number of game to be saved
 
 
-#define NUM_SAVES_FOR_EASY_MODE 8
-#define NUM_SAVES_FOR_MEDIUM_MODE 4
+#define NUM_SAVES_FOR_EASY_MODE 999
+#define NUM_SAVES_FOR_MEDIUM_MODE 24
 #define NUM_SAVES_FOR_HARD_MODE 2
 
 int NumberOfSavesLeft;
