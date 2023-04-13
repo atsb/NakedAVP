@@ -1,4 +1,4 @@
-Aliens vs Predator Linux  http://icculus.org/avp/
+Aliens vs Predator  http://icculus.org/avp/
 ------------------------
 
 Table of Contents:
@@ -273,4 +273,4 @@ Part 5: Gibbon's Additions
 
 Gibbon has fixed SDL2, performed code cleanups and fixed various crashes and stack smashing issues on Linux.
 
-The future is bright for this port, like all my projects I am aiming for this to be portable to 'everything'.  Wanna play it on an RPI3?  Hold my beer..
+The future is bright for this port, like all my projects I am aiming for this to be portable to 'everything', which in its current state, it is.  It works on Windows, macOS and GNU/Linux, making this port the 'only' AvP Classic source port that runs on all three main Operating Sytstems.  It is also, of course, the best one :P
