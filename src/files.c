@@ -739,7 +739,7 @@ void InitGameDirectories(char *argv0)
         gamedir = I_GetUserDir();
 #endif
 
-#if define __linux__
+#if defined __linux__
 	gamedir = "/usr/local/games/AliensVsPredator/";
 #endif
 

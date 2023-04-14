@@ -3128,34 +3128,34 @@ void LoadModuleData()
  	GLOBALASSERT(env_rif);
 
 /* TODO: dir separator */
- 	HANDLE file = CreateFile ("avp_rifs/module.bbb", GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 
+ 	HANDLE file = AVPCreateFile ("avp_rifs/module.bbb", GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
  					FILE_FLAG_RANDOM_ACCESS, 0);
 	unsigned long byteswritten;
-	WriteFile(file,&Global_VDB_Ptr->VDB_World,sizeof(VECTORCH),&byteswritten,0);
-	WriteFile(file,&Global_VDB_Ptr->VDB_Mat,sizeof(MATRIXCH),&byteswritten,0);
+    AVPWriteFile(file,&Global_VDB_Ptr->VDB_World,sizeof(VECTORCH),&byteswritten,0);
+    AVPWriteFile(file,&Global_VDB_Ptr->VDB_Mat,sizeof(MATRIXCH),&byteswritten,0);
  	
- 	CloseHandle(file);
+    AVPCloseHandle(file);
 
 /* TODO: dir separator */
- 	file = CreateFile ("avp_rifs/module.aaa", GENERIC_READ, 0, 0, OPEN_EXISTING, 
+ 	file = AVPCreateFile ("avp_rifs/module.aaa", GENERIC_READ, 0, 0, OPEN_EXISTING,
  					FILE_FLAG_RANDOM_ACCESS, 0);
 
 	if(file==INVALID_HANDLE_VALUE) return;
 
 	if(!env_rif->fc)
 	{
-	 	CloseHandle(file);
+        AVPCloseHandle(file);
 		NewOnScreenMessage("MODULE UPDATING REQUIRES -KEEPRIF OPTION.");
 		return;
 	}
 
-	int file_size=GetFileSize(file,0);
+	int file_size=AVPGetFileSize(file,0);
 	GLOBALASSERT((file_size % 4)==0);
 	int pos=0;
 	unsigned long bytesread;
 	{
 		char name[60];
-		ReadFile(file,name,60,&bytesread,0);
+        AVPReadFile(file,name,60,&bytesread,0);
 		
 		int i=0;
 		char* name1=&name[0];
@@ -3180,8 +3180,8 @@ void LoadModuleData()
 
 		if(_stricmp(name1,name2))
 		{
-			CloseHandle(file);
-			DeleteFile("avp_rifs\\module.aaa");
+            AVPCloseHandle(file);
+            AVPDeleteFile("avp_rifs\\module.aaa");
 			return;
 		}
 
@@ -3192,7 +3192,7 @@ void LoadModuleData()
 	while(pos<file_size)
 	{
 		int obj_index;
-		ReadFile(file,&obj_index,4,&bytesread,0);
+        AVPReadFile(file,&obj_index,4,&bytesread,0);
 		pos+=4;
 
 		Object_Chunk* obj=env_rif->fc->get_object_by_index(obj_index);
@@ -3201,7 +3201,7 @@ void LoadModuleData()
 		MODULE* this_mod=&MainScene.sm_module[obj->program_object_index+2];
 
 		int numlinks;
-		ReadFile(file,&numlinks,4,&bytesread,0);
+        AVPReadFile(file,&numlinks,4,&bytesread,0);
 		pos+=4;
 
 		if(!numlinks) continue;
@@ -3218,8 +3218,8 @@ void LoadModuleData()
 		{
 			int linked_index;
 			int branch_no;
-			ReadFile(file,&linked_index,4,&bytesread,0);
-			ReadFile(file,&branch_no,4,&bytesread,0);
+            AVPReadFile(file,&linked_index,4,&bytesread,0);
+            AVPReadFile(file,&branch_no,4,&bytesread,0);
 			pos+=8;
 			
 			Object_Chunk* linked_module=env_rif->fc->get_object_by_index(linked_index);
@@ -3279,8 +3279,8 @@ void LoadModuleData()
 		*((int *)this_mod->m_vmptr[vmod_no].vmod_name) = vmac_no;
 	}
 	
-	CloseHandle(file);
-	DeleteFile("avp_rifs\\module.aaa");
+    AVPCloseHandle(file);
+    AVPDeleteFile("avp_rifs\\module.aaa");
 }
 #endif
 
@@ -3354,7 +3354,7 @@ static BOOL WarnedAboutDiskSpace=FALSE;
 static void MakeBackupFile(File_Chunk* fc)
 {
 	unsigned long spc,bps,numclust,total;
-	if(GetDiskFreeSpace(0,&spc,&bps,&numclust,&total))
+	if(AVPGetDiskFreeSpace(0,&spc,&bps,&numclust,&total))
 	{
 		unsigned int freespace=spc*bps*numclust;
 		if(freespace<40000000)
@@ -3370,7 +3370,7 @@ static void MakeBackupFile(File_Chunk* fc)
 	}
 	WarnedAboutDiskSpace=FALSE;
 
-	CreateDirectory("avp_rifs\\Backup",0);
+    AVPCreateDirectory("avp_rifs\\Backup",0);
 	int length=strlen(fc->filename);
 	int pos=length;
 	while(pos>=0 && fc->filename[pos]!='\\')pos--;
@@ -3386,16 +3386,16 @@ static void MakeBackupFile(File_Chunk* fc)
 	strncpy(&Name1[length],"B0.rif",7);
 	strncpy(&Name2[length],"B1.rif",7);
 	
-	DeleteFile(Name1);
+    AVPDeleteFile(Name1);
 	
 	for (int i=0;i<9;i++)
 	{
 		Name1[length+1]=i+'0';
 		Name2[length+1]=i+'1';
-		MoveFile(Name2,Name1);
+        AVPMoveFile(Name2,Name1);
 	}
 	Name2[length+1]='9';
-	CopyFile(fc->filename,Name2,FALSE);
+    AVPCopyFile(fc->filename,Name2,FALSE);
 
 	delete [] Name1;
 	delete [] Name2;
@@ -3416,7 +3416,7 @@ void save_preplaced_decals()
 	
 	{
 		
-		DWORD attributes = GetFileAttributes(env_rif->fc->filename);
+		DWORD attributes = AVPGetFileAttributes(env_rif->fc->filename);
 		if (0xffffffff!=attributes)
 		{
 			if (attributes & FILE_ATTRIBUTE_READONLY)

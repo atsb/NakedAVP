@@ -341,8 +341,8 @@ BOOL Shape_Chunk::file_equals(HANDLE &rif_file)
 	if (obhead.size() != 1) return FALSE;
 
 	// get object identifier
-	SetFilePointer(rif_file,obhead.first_entry() + 32,0,FILE_BEGIN);
-	ReadFile (rif_file, (long *) &(id), 4, &bytes_read, 0);
+	AVPSetFilePointer(rif_file,obhead.first_entry() + 32,0,FILE_BEGIN);
+	AVPReadFile (rif_file, (long *) &(id), 4, &bytes_read, 0);
 
 	if (hdptr->file_id_num == id) return TRUE;
 
@@ -615,7 +615,7 @@ BOOL Shape_Vertex_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -695,7 +695,7 @@ BOOL Shape_Vertex_Normal_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -792,7 +792,7 @@ BOOL Shape_Polygon_Normal_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -929,7 +929,7 @@ BOOL Shape_Polygon_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -1125,7 +1125,7 @@ BOOL Shape_UV_Coord_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -1233,7 +1233,7 @@ BOOL Shape_Texture_Filenames_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -1374,7 +1374,7 @@ BOOL Shape_Header_Chunk::output_chunk(HANDLE & hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 

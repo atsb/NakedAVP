@@ -89,7 +89,7 @@ BOOL Sprite_Action_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -257,7 +257,7 @@ int Sprite_Header_Chunk::write_file(const char* fname)
 {
 	HANDLE rif_file;
 
-	rif_file = CreateFileA (fname, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 
+	rif_file = AVPCreateFileA (fname, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
 					FILE_FLAG_RANDOM_ACCESS, 0);
 
 	if (rif_file == INVALID_HANDLE_VALUE) {
@@ -269,7 +269,7 @@ int Sprite_Header_Chunk::write_file(const char* fname)
 	if (!(this->output_chunk(rif_file)))
 		return CHUNK_FAILED_ON_WRITE;
 
-	CloseHandle (rif_file);
+	AVPCloseHandle (rif_file);
 
 	return 0;
 }
@@ -282,7 +282,7 @@ BOOL Sprite_Header_Chunk::output_chunk(HANDLE & hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -412,7 +412,7 @@ BOOL Sprite_Size_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
@@ -472,7 +472,7 @@ BOOL Sprite_Version_Number_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
 
 	delete [] data_block;
 
