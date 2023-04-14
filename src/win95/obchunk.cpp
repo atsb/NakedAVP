@@ -156,9 +156,16 @@ BOOL Object_Chunk::file_equals(HANDLE &rif_file)
 	if (obhead.size() != 1) return FALSE;
 
 	// get object identifier
-    AVPSetFilePointer(rif_file,obhead.first_entry() + 96,0,FILE_BEGIN);
-	int i = 0; 
-	do AVPReadFile (rif_file, (long *) (name + i), 1, &bytes_read, 0);
+#ifdef _WIN32
+	SetFilePointer(rif_file, obhead.first_entry() + 96, 0, FILE_BEGIN);
+	int i = 0;
+	do ReadFile(rif_file, (long*)(name + i), 1, &bytes_read, 0);
+#else
+	AVPSetFilePointer(rif_file, obhead.first_entry() + 96, 0, FILE_BEGIN);
+	int i = 0;
+	do AVPReadFile(rif_file, (long*)(name + i), 1, &bytes_read, 0);
+#endif
+
 	while (name[i++] != 0);
 
 	if (!strcmp(name, object_data.o_name) ) return (TRUE);
@@ -490,7 +497,11 @@ BOOL Object_Header_Chunk::output_chunk (HANDLE & hand)
 
 	data_block = make_data_block_from_chunk();
 
-	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#endif
 
 	delete [] data_block;
 
@@ -617,7 +628,11 @@ BOOL Object_Notes_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = make_data_block_from_chunk();
 
-	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#endif
 
 	delete [] data_block;
 

@@ -94,7 +94,11 @@ BOOL AllSprites_Header_Chunk::output_chunk (HANDLE & hand)
 
 	data_block = make_data_block_from_chunk();
 
-	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#endif
 
 	delete [] data_block;
 

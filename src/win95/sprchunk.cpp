@@ -89,7 +89,11 @@ BOOL Sprite_Action_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#endif
 
 	delete [] data_block;
 
@@ -257,8 +261,13 @@ int Sprite_Header_Chunk::write_file(const char* fname)
 {
 	HANDLE rif_file;
 
-	rif_file = AVPCreateFileA (fname, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
-					FILE_FLAG_RANDOM_ACCESS, 0);
+#ifdef _WIN32
+	rif_file = CreateFileA(fname, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+		FILE_FLAG_RANDOM_ACCESS, 0);
+#else
+	rif_file = AVPCreateFileA(fname, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+		FILE_FLAG_RANDOM_ACCESS, 0);
+#endif
 
 	if (rif_file == INVALID_HANDLE_VALUE) {
 		return CHUNK_FAILED_ON_WRITE;
@@ -269,7 +278,11 @@ int Sprite_Header_Chunk::write_file(const char* fname)
 	if (!(this->output_chunk(rif_file)))
 		return CHUNK_FAILED_ON_WRITE;
 
-	AVPCloseHandle (rif_file);
+#ifdef _WIN32
+	CloseHandle(rif_file);
+#else
+	AVPCloseHandle(rif_file);
+#endif
 
 	return 0;
 }
@@ -282,7 +295,11 @@ BOOL Sprite_Header_Chunk::output_chunk(HANDLE & hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#endif
 
 	delete [] data_block;
 
@@ -412,7 +429,11 @@ BOOL Sprite_Size_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#endif
 
 	delete [] data_block;
 
@@ -472,7 +493,11 @@ BOOL Sprite_Version_Number_Chunk::output_chunk (HANDLE &hand)
 
 	data_block = this->make_data_block_from_chunk();
 
-	ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#endif
 
 	delete [] data_block;
 

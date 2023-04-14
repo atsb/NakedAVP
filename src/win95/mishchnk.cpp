@@ -204,7 +204,11 @@ BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 
 	if (!hd_id) return FALSE;
 
-    AVPSetFilePointer (rif_file,0,0,FILE_BEGIN);
+#ifdef _WIN32
+	SetFilePointer(rif_file, 0, 0, FILE_BEGIN);
+#else
+	AVPSetFilePointer(rif_file, 0, 0, FILE_BEGIN);
+#endif
 
 	//twprintf("\nLooking for chunks in file\n");
 
@@ -220,11 +224,20 @@ BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 	if (shpfptrs.size()) {
 		for (; !sfpl.done(); sfpl.next()) {
 
-            AVPSetFilePointer (rif_file, sfpl()+8,0,FILE_BEGIN);
+#ifdef _WIN32
+			SetFilePointer(rif_file, sfpl() + 8, 0, FILE_BEGIN);
 
-            AVPReadFile (rif_file, (long *) &(length), 4, &bytes_read, 0);
+			ReadFile(rif_file, (long*)&(length), 4, &bytes_read, 0);
 
-            AVPSetFilePointer (rif_file, sfpl(),0,FILE_BEGIN);
+			SetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
+#else
+			AVPSetFilePointer(rif_file, sfpl() + 8, 0, FILE_BEGIN);
+
+			AVPReadFile(rif_file, (long*)&(length), 4, &bytes_read, 0);
+
+			AVPSetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
+#endif
+
 			if (file_equals(rif_file)) break;
 		}
 	}
@@ -237,19 +250,35 @@ BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 
 	if (!sfpl.done())
 	{
-
-		int file_length = AVPGetFileSize(rif_file,0);
+#ifdef _WIN32
+		int file_length = GetFileSize(rif_file, 0);
+#else
+		int file_length = AVPGetFileSize(rif_file, 0);
+#endif
 
 		if (file_length > (sfpl() + length)) {
 							
-            AVPSetFilePointer (rif_file, sfpl() + length,0,FILE_BEGIN);
+#ifdef _WIN32
+			SetFilePointer(rif_file, sfpl() + length, 0, FILE_BEGIN);
+#else
+			AVPSetFilePointer(rif_file, sfpl() + length, 0, FILE_BEGIN);
+#endif
 
 			char * tempbuffer;
 			tempbuffer = new char [file_length - (sfpl() + length)];
 
-            AVPReadFile (rif_file, (long *) tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+#ifdef _WIN32
+			ReadFile(rif_file, (long*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+#else
+			AVPReadFile(rif_file, (long*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+#endif
 
-            AVPSetFilePointer (rif_file, sfpl() ,0,FILE_BEGIN);
+
+#ifdef _WIN32
+			SetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
+#else
+			AVPSetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
+#endif
 			
 			if (!deleted)
 			{
@@ -257,45 +286,74 @@ BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 				output_chunk(rif_file);
 			}
 			
-            AVPWriteFile (rif_file, (long *) tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+#ifdef _WIN32
+			WriteFile(rif_file, (long*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+#else
+			AVPWriteFile(rif_file, (long*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+#endif
 
 			delete [] tempbuffer;
 
-            AVPSetEndOfFile (rif_file);
+#ifdef _WIN32
+			SetEndOfFile(rif_file);
+#else
+			AVPSetEndOfFile(rif_file);
+#endif
 		}
 		else{
 
-            AVPSetFilePointer (rif_file, sfpl() ,0,FILE_BEGIN);
+#ifdef _WIN32
+			SetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
+#else
+			AVPSetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
+#endif
 			if (!deleted)
 			{
 				size_chunk();
 				output_chunk(rif_file);
 			}
-            AVPSetEndOfFile (rif_file);
+#ifdef _WIN32
+			SetEndOfFile(rif_file);
+#else
+			AVPSetEndOfFile(rif_file);
+#endif
 		}
 
 	}
 	else {
-
-        AVPSetFilePointer (rif_file,0 ,0,FILE_END);
+#ifdef _WIN32
+		SetFilePointer(rif_file, 0, 0, FILE_END);
+#else
+		AVPSetFilePointer(rif_file, 0, 0, FILE_END);
+#endif
 		if (!deleted)
 		{
 			size_chunk();
 			output_chunk(rif_file);
 		}
-        AVPSetEndOfFile (rif_file);
+#ifdef _WIN32
+		SetEndOfFile(rif_file);
+#else
+		AVPSetEndOfFile(rif_file);
+#endif
 	}
 
 	local_lock = FALSE;
 
 	updated = FALSE;
 	
-	int file_length = AVPGetFileSize(rif_file,0);
-    AVPSetFilePointer (rif_file,8,0,FILE_BEGIN);
+#ifdef _WIN32
+	int file_length = GetFileSize(rif_file, 0);
+	SetFilePointer(rif_file, 8, 0, FILE_BEGIN);
 
-    AVPWriteFile (rif_file, (long *) &file_length, 4, &bytes_read, 0);
+	WriteFile(rif_file, (long*)&file_length, 4, &bytes_read, 0);
+#else
+	int file_length = AVPGetFileSize(rif_file, 0);
+	AVPSetFilePointer(rif_file, 8, 0, FILE_BEGIN);
 
-	
+	AVPWriteFile(rif_file, (long*)&file_length, 4, &bytes_read, 0);
+#endif
+
 	// DO NOT PUT ANY CODE AFTER THIS
 	
 	if (deleted) delete this;
@@ -498,7 +556,11 @@ BOOL File_Chunk::write_file (const char * fname)
 {
 	if(!fname) return FALSE;
 	//if a read_only file exists with this filename , then abort attempt to save
+#ifdef _WIN32
+	DWORD attributes = GetFileAttributesA(fname);
+#else
 	DWORD attributes = AVPGetFileAttributesA(fname);
+#endif
 	if (0xffffffff!=attributes)
 	{
 		if (attributes & FILE_ATTRIBUTE_READONLY)
@@ -553,8 +615,13 @@ BOOL File_Chunk::write_file (const char * fname)
 	if(!outPackage) return FALSE;
 
 	//and now try to write the file
-	rif_file = AVPCreateFileA (temp_name, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
-					FILE_FLAG_RANDOM_ACCESS, 0);
+#ifdef _WIN32
+	rif_file = CreateFileA(temp_name, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+		FILE_FLAG_RANDOM_ACCESS, 0);
+#else
+	rif_file = AVPCreateFileA(temp_name, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+		FILE_FLAG_RANDOM_ACCESS, 0);
+#endif
 
 	if (rif_file == INVALID_HANDLE_VALUE) {
 		delete [] temp_name;
@@ -565,9 +632,15 @@ BOOL File_Chunk::write_file (const char * fname)
 	unsigned long junk;
 	BOOL ok;
 
-	ok = AVPWriteFile (rif_file, (long *) outPackage,outPackage->CompressedDataSize+sizeof(HuffmanPackage), &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(rif_file, (long*)outPackage, outPackage->CompressedDataSize + sizeof(HuffmanPackage), &junk, 0);
 
-    AVPCloseHandle (rif_file);
+	CloseHandle(rif_file);
+#else
+	ok = AVPWriteFile(rif_file, (long*)outPackage, outPackage->CompressedDataSize + sizeof(HuffmanPackage), &junk, 0);
+
+	AVPCloseHandle(rif_file);
+#endif
 
 	free (outPackage);
 
@@ -596,8 +669,13 @@ BOOL File_Chunk::write_file (const char * fname)
 	#endif
 
 	//Delete the old file with this name (if it exists) , and rename the temprary file
-    AVPDeleteFileA(fname);
-    AVPMoveFileA(temp_name,fname);
+#ifdef _WIN32
+	DeleteFileA(fname);
+	MoveFileA(temp_name, fname);
+#else
+	AVPDeleteFileA(fname);
+	AVPMoveFileA(temp_name, fname);
+#endif
 
 	delete [] temp_name;
 
@@ -1257,32 +1335,52 @@ BOOL File_Chunk::update_chunks_from_file()
 	HANDLE rif_file;
 	unsigned long bytes_read;
 	
-	rif_file = AVPCreateFileA (filename, GENERIC_WRITE + GENERIC_READ, 0, 0, OPEN_EXISTING,
-					FILE_FLAG_RANDOM_ACCESS, 0);
+#ifdef _WIN32
+	rif_file = CreateFileA(filename, GENERIC_WRITE + GENERIC_READ, 0, 0, OPEN_EXISTING,
+		FILE_FLAG_RANDOM_ACCESS, 0);
+#else
+	rif_file = AVPCreateFileA(filename, GENERIC_WRITE + GENERIC_READ, 0, 0, OPEN_EXISTING,
+		FILE_FLAG_RANDOM_ACCESS, 0);
+#endif
 
 	if (rif_file == INVALID_HANDLE_VALUE) {
 		error_code = CHECK_FAILED_NOT_OPEN;
 		return FALSE;
 	}
 	
-    AVPSetFilePointer (rif_file,0,0,FILE_BEGIN);
+#ifdef _WIN32
+	SetFilePointer(rif_file, 0, 0, FILE_BEGIN);
+#else
+	AVPSetFilePointer(rif_file, 0, 0, FILE_BEGIN);
+#endif
 	
 	List<int> verinf; list_chunks_in_file(& verinf, rif_file, "RIFVERIN");
 
 	if (verinf.size()) {
 
 		int f_version_num;
-        AVPSetFilePointer (rif_file,verinf.first_entry() + 12,0,FILE_BEGIN);
-        AVPReadFile (rif_file, (long *) &f_version_num, 4, &bytes_read, 0);
+#ifdef _WIN32
+		SetFilePointer(rif_file, verinf.first_entry() + 12, 0, FILE_BEGIN);
+		ReadFile(rif_file, (long*)&f_version_num, 4, &bytes_read, 0);
 
-        AVPSetFilePointer (rif_file,verinf.first_entry() + 12,0,FILE_BEGIN);
+		SetFilePointer(rif_file, verinf.first_entry() + 12, 0, FILE_BEGIN);
+#else
+		AVPSetFilePointer(rif_file, verinf.first_entry() + 12, 0, FILE_BEGIN);
+		AVPReadFile(rif_file, (long*)&f_version_num, 4, &bytes_read, 0);
+
+		AVPSetFilePointer(rif_file, verinf.first_entry() + 12, 0, FILE_BEGIN);
+#endif
 
 		List<Chunk *> lverinf;
 		lookup_child ("RIFVERIN",lverinf);
 
 		if (lverinf.size())
 			if (f_version_num == ((RIF_Version_Num_Chunk *)(lverinf.first_entry()))->file_version_no){
-                AVPCloseHandle (rif_file);
+#ifdef _WIN32
+				CloseHandle(rif_file);
+#else
+				AVPCloseHandle(rif_file);
+#endif
 				return TRUE;
 			}
 
@@ -1301,7 +1399,11 @@ BOOL File_Chunk::update_chunks_from_file()
 			if (tmpobptr->updated_outside) {
 			// find the chunk, then input it to a buffer and create a new object
 			// from the buffer
-                AVPSetFilePointer (rif_file,0,0,FILE_BEGIN);
+#ifdef _WIN32
+				SetFilePointer(rif_file, 0, 0, FILE_BEGIN);
+#else
+				AVPSetFilePointer(rif_file, 0, 0, FILE_BEGIN);
+#endif
 				
 				List<int> obfptrs; list_chunks_in_file(& obfptrs, rif_file, "RBOBJECT");
 
@@ -1312,16 +1414,28 @@ BOOL File_Chunk::update_chunks_from_file()
 				if (obfptrs.size()) {
 					for (; !ofpl.done(); ofpl.next()) {
 
-                        AVPSetFilePointer (rif_file, ofpl(),0,FILE_BEGIN);
+#ifdef _WIN32
+						SetFilePointer(rif_file, ofpl(), 0, FILE_BEGIN);
+#else
+						AVPSetFilePointer(rif_file, ofpl(), 0, FILE_BEGIN);
+#endif
 						// get header list
 						List<int> obhead; list_chunks_in_file(& obhead, rif_file, "OBJHEAD1");
 
 						assert (obhead.size() == 1);
 
 						// get object identifier
-                        AVPSetFilePointer(rif_file,obhead.first_entry() + 96,0,FILE_BEGIN);
+#ifdef _WIN32
+						SetFilePointer(rif_file, obhead.first_entry() + 96, 0, FILE_BEGIN);
+#else
+						AVPSetFilePointer(rif_file, obhead.first_entry() + 96, 0, FILE_BEGIN);
+#endif
 						int i = 0; 
-						do AVPReadFile (rif_file, (long *) (name + i), 1, &bytes_read, 0);
+#ifdef _WIN32
+						do ReadFile(rif_file, (long*)(name + i), 1, &bytes_read, 0);
+#else
+						do AVPReadFile(rif_file, (long*)(name + i), 1, &bytes_read, 0);
+#endif
 						while (name[i++] != 0);
 
 						if (!strcmp(name, tmpobptr->object_data.o_name)) break;
@@ -1332,11 +1446,19 @@ BOOL File_Chunk::update_chunks_from_file()
 	
 					char * buffer;
 
-                    AVPSetFilePointer (rif_file,ofpl()+8,0,FILE_BEGIN);
+#ifdef _WIN32
+					SetFilePointer(rif_file, ofpl() + 8, 0, FILE_BEGIN);
 					int length;
-                    AVPReadFile(rif_file, (long *) &length, 4, &bytes_read, 0);
-					buffer = new char [length];
-                    AVPReadFile(rif_file, (long *) buffer, length-12, &bytes_read, 0);
+					ReadFile(rif_file, (long*)&length, 4, &bytes_read, 0);
+					buffer = new char[length];
+					ReadFile(rif_file, (long*)buffer, length - 12, &bytes_read, 0);
+#else
+					AVPSetFilePointer(rif_file, ofpl() + 8, 0, FILE_BEGIN);
+					int length;
+					AVPReadFile(rif_file, (long*)&length, 4, &bytes_read, 0);
+					buffer = new char[length];
+					AVPReadFile(rif_file, (long*)buffer, length - 12, &bytes_read, 0);
+#endif
 					new Object_Chunk (this, buffer, length-12);
 					delete [] buffer;
 					if (tmpobptr->get_header())
@@ -1368,7 +1490,11 @@ BOOL File_Chunk::update_chunks_from_file()
 			if (tmpshpptr->updated_outside) {
 			// find the chunk, then input it to a buffer and create a new object
 			// from the buffer
-                AVPSetFilePointer (rif_file,0,0,FILE_BEGIN);
+#ifdef _WIN32
+				SetFilePointer(rif_file, 0, 0, FILE_BEGIN);
+#else
+				AVPSetFilePointer(rif_file, 0, 0, FILE_BEGIN);
+#endif
 
 				List<int> shfptrs; list_chunks_in_file(& shfptrs, rif_file, "REBSHAPE");
 
@@ -1377,16 +1503,26 @@ BOOL File_Chunk::update_chunks_from_file()
 				if (shfptrs.size()) {
 					for (sfpl.restart(); !sfpl.done(); sfpl.next()) {
 
-                        AVPSetFilePointer (rif_file, sfpl(),0,FILE_BEGIN);
+#ifdef _WIN32
+						SetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
+#else
+						AVPSetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
+#endif
 						// get header list
 						List<int> shphead; list_chunks_in_file(& shphead, rif_file, "SHPHEAD1");
 
 						assert (shphead.size() == 1);
 
 						// get object identifier
-                        AVPSetFilePointer(rif_file,shphead.first_entry() + 32,0,FILE_BEGIN);
-						int sh_number; 
-                        AVPReadFile (rif_file, (long *) &sh_number, 4, &bytes_read, 0);
+#ifdef _WIN32
+						SetFilePointer(rif_file, shphead.first_entry() + 32, 0, FILE_BEGIN);
+						int sh_number;
+						ReadFile(rif_file, (long*)&sh_number, 4, &bytes_read, 0);
+#else
+						AVPSetFilePointer(rif_file, shphead.first_entry() + 32, 0, FILE_BEGIN);
+						int sh_number;
+						AVPReadFile(rif_file, (long*)&sh_number, 4, &bytes_read, 0);
+#endif
 
 						if (sh_number == shhead->file_id_num) break;
 					}
@@ -1396,11 +1532,19 @@ BOOL File_Chunk::update_chunks_from_file()
 	
 					char * buffer;
 
-                    AVPSetFilePointer (rif_file,sfpl()+8,0,FILE_BEGIN);
+#ifdef _WIN32
+					SetFilePointer(rif_file, sfpl() + 8, 0, FILE_BEGIN);
 					int length;
-                    AVPReadFile(rif_file, (long *) &length, 4, &bytes_read, 0);
-					buffer = new char [length];
-                    AVPReadFile(rif_file, (long *) buffer, length-12, &bytes_read, 0);
+					ReadFile(rif_file, (long*)&length, 4, &bytes_read, 0);
+					buffer = new char[length];
+					ReadFile(rif_file, (long*)buffer, length - 12, &bytes_read, 0);
+#else
+					AVPSetFilePointer(rif_file, sfpl() + 8, 0, FILE_BEGIN);
+					int length;
+					AVPReadFile(rif_file, (long*)&length, 4, &bytes_read, 0);
+					buffer = new char[length];
+					AVPReadFile(rif_file, (long*)buffer, length - 12, &bytes_read, 0);
+#endif
 					new Shape_Chunk (this, buffer, length-12);
 					delete [] buffer;
 					// Associate with the new objects
@@ -1418,7 +1562,11 @@ BOOL File_Chunk::update_chunks_from_file()
 
 	post_input_processing();
 
-    AVPCloseHandle(rif_file);
+#ifdef _WIN32
+	CloseHandle(rif_file);
+#else
+	AVPCloseHandle(rif_file);
+#endif
 
 	return TRUE;
 

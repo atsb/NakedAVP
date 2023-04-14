@@ -27,30 +27,56 @@ void list_chunks_in_file(List<int> * pList, HANDLE hand, char const * chunk_id)
 
 	// assuming we start at the front of a parent chunk, 
 	// containing the child chunk specified
-
-	int init_file_pos = AVPSetFilePointer (hand,0,0,FILE_CURRENT);
+#ifdef _WIN32
+	int init_file_pos = SetFilePointer(hand, 0, 0, FILE_CURRENT);
 	int file_pos;
-	int file_length = AVPGetFileSize(hand, 0);
+	int file_length = GetFileSize(hand, 0);
 
-    AVPSetFilePointer (hand,8,0,FILE_CURRENT);
+	SetFilePointer(hand, 8, 0, FILE_CURRENT);
 
 	int chunk_length;
 	int sub_chunk_ln;
 
-    AVPReadFile (hand, (long *) &chunk_length, 4, &bytes_read, 0);
+	ReadFile(hand, (long*)&chunk_length, 4, &bytes_read, 0);
+#else
+	int init_file_pos = AVPSetFilePointer(hand, 0, 0, FILE_CURRENT);
+	int file_pos;
+	int file_length = AVPGetFileSize(hand, 0);
+
+	AVPSetFilePointer(hand, 8, 0, FILE_CURRENT);
+
+	int chunk_length;
+	int sub_chunk_ln;
+
+	AVPReadFile(hand, (long*)&chunk_length, 4, &bytes_read, 0);
+#endif
 
 	if ((init_file_pos + chunk_length) > file_length) return;
 
-	while ((file_pos = AVPSetFilePointer (hand,0,0,FILE_CURRENT))
-					< (init_file_pos + chunk_length)  && ok) {
+#ifdef _WIN32
+	while ((file_pos = SetFilePointer(hand, 0, 0, FILE_CURRENT))
+		< (init_file_pos + chunk_length) && ok) {
 
-		ok = AVPReadFile (hand, (long *) buffer, 8, &bytes_read, 0);
+		ok = ReadFile(hand, (long*)buffer, 8, &bytes_read, 0);
+#else
+	while ((file_pos = AVPSetFilePointer(hand, 0, 0, FILE_CURRENT))
+		< (init_file_pos + chunk_length) && ok) {
+
+		ok = AVPReadFile(hand, (long*)buffer, 8, &bytes_read, 0);
+#endif
+
 		if (strncmp(buffer, chunk_id, 8) == 0)
 			pList->add_entry(file_pos);
 
-		ok = AVPReadFile (hand, (long *) &sub_chunk_ln, 4, &bytes_read, 0);
+#ifdef _WIN32
+		ok = ReadFile(hand, (long*)&sub_chunk_ln, 4, &bytes_read, 0);
 
-        AVPSetFilePointer (hand,sub_chunk_ln-12,0,FILE_CURRENT);
+		SetFilePointer(hand, sub_chunk_ln - 12, 0, FILE_CURRENT);
+#else
+		ok = AVPReadFile(hand, (long*)&sub_chunk_ln, 4, &bytes_read, 0);
+
+		AVPSetFilePointer(hand, sub_chunk_ln - 12, 0, FILE_CURRENT);
+#endif
 	}
 }
 
@@ -121,7 +147,11 @@ BOOL Chunk::output_chunk (HANDLE & hand)
 
 	if (data_block)
 	{
-		ok = AVPWriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+#ifdef _WIN32
+		ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#else
+		ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+#endif
 		delete [] data_block;
 
 		if (!ok) return FALSE;
@@ -279,11 +309,19 @@ BOOL Chunk_With_Children::output_chunk (HANDLE &hand)
 	Chunk * child_ptr = children;
 	BOOL ok;
 
-	ok = AVPWriteFile (hand, (long *) identifier, 8, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(hand, (long*)identifier, 8, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)identifier, 8, &junk, 0);
+#endif
 
 	if (!ok) return FALSE;
 
-	ok = AVPWriteFile (hand, (long *) &chunk_size, 4, &junk, 0);
+#ifdef _WIN32
+	ok = WriteFile(hand, (long*)&chunk_size, 4, &junk, 0);
+#else
+	ok = AVPWriteFile(hand, (long*)&chunk_size, 4, &junk, 0);
+#endif
 
 	if (!ok) return FALSE;
 	

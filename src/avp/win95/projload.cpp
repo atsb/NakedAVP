@@ -3131,10 +3131,15 @@ void LoadModuleData()
  	HANDLE file = AVPCreateFile ("avp_rifs/module.bbb", GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
  					FILE_FLAG_RANDOM_ACCESS, 0);
 	unsigned long byteswritten;
-    AVPWriteFile(file,&Global_VDB_Ptr->VDB_World,sizeof(VECTORCH),&byteswritten,0);
-    AVPWriteFile(file,&Global_VDB_Ptr->VDB_Mat,sizeof(MATRIXCH),&byteswritten,0);
- 	
-    AVPCloseHandle(file);
+#ifdef _WIN32
+	WriteFile(file, &Global_VDB_Ptr->VDB_World, sizeof(VECTORCH), &byteswritten, 0);
+	WriteFile(file, &Global_VDB_Ptr->VDB_Mat, sizeof(MATRIXCH), &byteswritten, 0);
+	CloseHandle(file);
+#else
+	AVPWriteFile(file, &Global_VDB_Ptr->VDB_World, sizeof(VECTORCH), &byteswritten, 0);
+	AVPWriteFile(file, &Global_VDB_Ptr->VDB_Mat, sizeof(MATRIXCH), &byteswritten, 0);
+	AVPCloseHandle(file);
+#endif
 
 /* TODO: dir separator */
  	file = AVPCreateFile ("avp_rifs/module.aaa", GENERIC_READ, 0, 0, OPEN_EXISTING,
@@ -3354,7 +3359,11 @@ static BOOL WarnedAboutDiskSpace=FALSE;
 static void MakeBackupFile(File_Chunk* fc)
 {
 	unsigned long spc,bps,numclust,total;
-	if(AVPGetDiskFreeSpace(0,&spc,&bps,&numclust,&total))
+#ifdef _WIN32
+	if (GetDiskFreeSpace(0, &spc, &bps, &numclust, &total))
+#else
+	if (AVPGetDiskFreeSpace(0, &spc, &bps, &numclust, &total))
+#endif
 	{
 		unsigned int freespace=spc*bps*numclust;
 		if(freespace<40000000)
@@ -3370,7 +3379,12 @@ static void MakeBackupFile(File_Chunk* fc)
 	}
 	WarnedAboutDiskSpace=FALSE;
 
-    AVPCreateDirectory("avp_rifs\\Backup",0);
+#ifdef _WIN32
+	CreateDirectory("avp_rifs\\Backup", 0);
+#else
+	AVPCreateDirectory("avp_rifs\\Backup", 0);
+#endif
+
 	int length=strlen(fc->filename);
 	int pos=length;
 	while(pos>=0 && fc->filename[pos]!='\\')pos--;
@@ -3386,16 +3400,31 @@ static void MakeBackupFile(File_Chunk* fc)
 	strncpy(&Name1[length],"B0.rif",7);
 	strncpy(&Name2[length],"B1.rif",7);
 	
-    AVPDeleteFile(Name1);
+#ifdef _WIN32
+	DeleteFile(Name1);
+#else
+	AVPDeleteFile(Name1);
+#endif
 	
 	for (int i=0;i<9;i++)
 	{
 		Name1[length+1]=i+'0';
 		Name2[length+1]=i+'1';
-        AVPMoveFile(Name2,Name1);
+
+#ifdef _WIN32
+		MoveFile(Name2, Name1);
+#else
+		AVPMoveFile(Name2, Name1);
+#endif
+
 	}
 	Name2[length+1]='9';
-    AVPCopyFile(fc->filename,Name2,FALSE);
+
+#ifdef _WIN32
+	CopyFile(fc->filename, Name2, FALSE);
+#else
+	AVPCopyFile(fc->filename, Name2, FALSE);
+#endif
 
 	delete [] Name1;
 	delete [] Name2;
@@ -3415,8 +3444,11 @@ void save_preplaced_decals()
 	}
 	
 	{
-		
+#ifdef _WIN32
+		DWORD attributes = GetFileAttributes(env_rif->fc->filename);
+#else
 		DWORD attributes = AVPGetFileAttributes(env_rif->fc->filename);
+#endif
 		if (0xffffffff!=attributes)
 		{
 			if (attributes & FILE_ATTRIBUTE_READONLY)
