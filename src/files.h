@@ -37,7 +37,7 @@ int CreateGameDirectory(const char *dirname);
 void *OpenGameDirectory(const char *dirname, const char *pattern, int type);
 GameDirectoryFile *ScanGameDirectory(void *dir);
 int CloseGameDirectory(void *dir);
-void InitGameDirectories(char *argv0);
+void InitGameDirectories(char *argv0, char *argv_datapath);
 char* I_GetUserDir(void);
 
 #ifdef __cplusplus

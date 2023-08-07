@@ -631,7 +631,7 @@ char* I_GetUserDir(void)
 /*
   Game-specific initialization
  */
-void InitGameDirectories(char *argv0)
+void InitGameDirectories(char *argv0, char* argv_datapath)
 {
 	extern char *SecondTex_Directory;
 	extern char *SecondSoundDir;
@@ -644,9 +644,9 @@ void InitGameDirectories(char *argv0)
 	SecondTex_Directory = "graphics/";
 	SecondSoundDir = "sound/";
     
-    homedir = getenv("HOME");
-    if (homedir == NULL)
-        homedir = ".";
+	homedir = getenv("HOME");
+	if (homedir == NULL)
+		homedir = ".";
     
 	localdir = (char *)malloc(strlen(homedir)+10);
 	strcpy(localdir, homedir);
@@ -656,7 +656,8 @@ void InitGameDirectories(char *argv0)
 	tmp = NULL;
 	
 	/*
-	1. $AVP_DATA overrides all
+	0. $AVP_DATA
+	1. argv['d']
 	2. executable path from argv[0]
 	3. realpath of executable path from argv[0]
 	4. $PATH
@@ -667,7 +668,8 @@ void InitGameDirectories(char *argv0)
 	/* 1. $AVP_DATA */
 	gamedir = getenv("AVP_DATA");
 	
-	/* $AVP_DATA overrides all, so no check */
+	if (gamedir == NULL)
+		gamedir = argv_datapath;
 	
 	if (gamedir == NULL) {
 		/* 2. executable path from argv[0] */
@@ -728,6 +730,15 @@ void InitGameDirectories(char *argv0)
 			}
 		}
 	}
+
+#if defined __linux__
+	if (gamedir == NULL) {
+		gamedir = "/usr/local/games/AliensVsPredator/";
+		if (!check_game_directory(gamedir)) {
+			gamedir = NULL;
+		}
+	}
+#endif
 	
 	if (gamedir == NULL) {
 		/* 5. current directory */
@@ -735,17 +746,10 @@ void InitGameDirectories(char *argv0)
 	}
 	
 #elif defined __APPLE__
-		/* 6. Application Support directory */
+	/* 6. Application Support directory */
         gamedir = I_GetUserDir();
 #endif
 
-#if defined __linux__
-	gamedir = "/usr/local/games/AliensVsPredator/";
-#endif
-
-#if defined _WIN32
-	gamedir = ".";
-#endif
 
 	assert(gamedir != NULL);
 	

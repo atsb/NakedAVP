@@ -120,6 +120,8 @@ static GLsizei FullscreenTextureHeight;
 /* originally was "/usr/lib/libGL.so.1:/usr/lib/tls/libGL.so.1:/usr/X11R6/lib/libGL.so" */
 static const char * opengl_library = NULL;
 
+static const char * gamedatapath = NULL;
+
 /* ** */
 
 static void IngameKeyboardInput_ClearBuffer(void)
@@ -1467,6 +1469,7 @@ static const struct option getopt_long_options[] = {
 { "nojoy",	0,	NULL,	'j' },
 { "debug",	0,	NULL,	'd' },
 { "withgl",	1,	NULL,	'g' },
+{ "datapath",	1,	NULL,	'p' },
 /*
 { "loadrifs",	1,	NULL,	'l' },
 { "server",	0,	someval,	1 },
@@ -1486,6 +1489,7 @@ static const char *usage_string =
 "      [-s | --nosound]        Do not access the soundcard\n"
 "      [-c | --nocdrom]        Do not access the CD-ROM\n"
 "      [-j | --nojoy]          Do not access the joystick\n"
+"      [-p | --datapath] [x]   Look at [x] for game files\n"
 "      [-g | --withgl] [x]     Use [x] instead of /usr/lib/libGL.so.1 for OpenGL\n"
 ;
          
@@ -1495,7 +1499,7 @@ int main(int argc, char *argv[])
 	int c;
 	
 	opterr = 0;
-	while ((c = getopt_long(argc, argv, "hvfwscdg:", getopt_long_options, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "hvfwscdg:p:", getopt_long_options, NULL)) != -1) {
 		switch(c) {
 			case 'h':
 				printf("%s", usage_string);
@@ -1526,14 +1530,16 @@ int main(int argc, char *argv[])
 			case 'g':
 				opengl_library = optarg;
 				break;
+			case 'p':
+				gamedatapath = optarg;
+				break;
 			default:
 				printf("%s", usage_string);
 				exit(EXIT_FAILURE);	
 		}
 	}
 #endif
-
-	InitGameDirectories(argv[0]);
+	InitGameDirectories(argv[0], gamedatapath);
 	
 	if (InitSDL() == -1) {
 		fprintf(stderr, "Could not find a sutable resolution!\n");
