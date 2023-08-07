@@ -813,7 +813,7 @@ Determine area used by text , so we can draw it centrally
 				if(sy+HUD_FONT_HEIGHT> area->bottom) break;
 			}
 			
-			if (c>=' ' || c<='z') {
+			if (c>=' ' && c<='z') {
 				int topLeftU = 1+((c-32)&15)*16;
 				int topLeftV = 1+((c-32)>>4)*16;
 				int x, y;
