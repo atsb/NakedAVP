@@ -2,6 +2,9 @@
 
 #include <assert.h>
 
+#include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL.h>
+
 #ifndef _WIN32
 #include <unistd.h>
 #include <dirent.h>
@@ -14,10 +17,6 @@
 #include "win32/dirent.h"
 #define R_OK 0
 #define W_OK 0
-#endif
-
-#if defined __APPLE__
-#include <SDL2/SDL.h>
 #endif
 
 #include <stdio.h>

@@ -6,14 +6,14 @@
 #endif
 
 #if defined(USE_OPENGL_ES)
-#include "SDL_opengles.h"
+#include <SDL3/SDL_opengles.h>
 
 // OpenGL compatibility
 typedef GLclampf GLclampd;
 typedef GLfloat GLdouble;
 
 #else
-#include "SDL_opengl.h"
+#include <SDL3/SDL_opengl.h>
 #endif
 
 #if !defined(GL_CLAMP_TO_EDGE)

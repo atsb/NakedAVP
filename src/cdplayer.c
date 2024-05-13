@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 #include "fixer.h"
 #include "win95/cd_player.h"
