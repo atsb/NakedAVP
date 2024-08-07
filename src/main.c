@@ -734,7 +734,7 @@ static int SetOGLVideoMode(int Width, int Height)
 	if (window == NULL) {
 		load_ogl_functions(0);
 
-		flags = SDL_WINDOW_OPENGL;
+		flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
 #if defined(FIXED_WINDOW_SIZE)
 		flags |= SDL_WINDOW_BORDERLESS;
