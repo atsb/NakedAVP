@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #include "oglfunc.h"
 
 #if !defined(_MSC_VER)
@@ -155,21 +155,21 @@ void ReadJoysticks()
 		return;
 	}
 
-	SDL_JoystickUpdate();
+	SDL_UpdateJoysticks();
 	
-	axes = SDL_JoystickNumAxes(joy);
-	balls = SDL_JoystickNumBalls(joy);
-	hats = SDL_JoystickNumHats(joy);
+	axes = SDL_GetNumJoystickAxes(joy);
+	balls = SDL_GetNumJoystickBalls(joy);
+	hats = SDL_GetNumJoystickHats(joy);
 	
 	if (axes > 0) {
-		JoystickData.dwXpos = SDL_JoystickGetAxis(joy, 0) + 32768;
+		JoystickData.dwXpos = SDL_GetJoystickAxis(joy, 0) + 32768;
 	}
 	if (axes > 1) {
-		JoystickData.dwYpos = SDL_JoystickGetAxis(joy, 1) + 32768;
+		JoystickData.dwYpos = SDL_GetJoystickAxis(joy, 1) + 32768;
 	}
 	
 	if (hats > 0) {
-		hat = SDL_JoystickGetHat(joy, 0);
+		hat = SDL_GetJoystickHat(joy, 0);
 		
 		switch (hat) {
 			default:
@@ -498,14 +498,10 @@ int InitSDL()
 
 	if (WantJoystick) {
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-		
-		if (SDL_NumJoysticks() > 0) {
-			/* TODO: make joystick number a configuration parameter */
 			
-			joy = SDL_JoystickOpen(0);
-			if (joy) {
-				GotJoystick = 1;
-			}
+		joy = SDL_OpenJoystick(0);
+		if (joy) {
+			GotJoystick = 1;
 			
 			JoystickCaps.wCaps = 0; /* no rudder... ? */
 			
@@ -534,7 +530,7 @@ int InitSDL()
     amask = 0x00000000;
 #endif
 
-	surface = SDL_CreateRGBSurface(0, 640, 480, 16, rmask, gmask, bmask, amask);
+	surface = SDL_CreateSurface(640, 480, SDL_PIXELFORMAT_RGBA5551);
 	if (surface == NULL) {
 		return -1;
 	}
@@ -705,7 +701,7 @@ static int SDLCALL SDLEventFilter(void* userData, SDL_Event* event) {
 	//printf("SDLEventFilter: %d\n", event->type);
 	
 	switch (event->type) {
-		case SDL_APP_TERMINATING:
+		case SDL_EVENT_TERMINATING:
 			AvP.MainLoopRunning = 0; /* TODO */
 			break;
 	}
@@ -745,7 +741,7 @@ static int SetOGLVideoMode(int Width, int Height)
 		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 #else
 		if (WantFullscreen) {
-			flags |= (WantResolutionChange != 0 ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_FULLSCREEN_DESKTOP);
+			flags |= (WantResolutionChange != 0 ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_FULLSCREEN);
 		}
 
 		// the game doesn't properly support window resizing
@@ -784,8 +780,6 @@ static int SetOGLVideoMode(int Width, int Height)
 		//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 		window = SDL_CreateWindow("Aliens vs Predator",
-								  SDL_WINDOWPOS_UNDEFINED,
-								  SDL_WINDOWPOS_UNDEFINED,
 								  WindowWidth,
 								  WindowHeight,
 								  flags);
@@ -864,7 +858,7 @@ int InitialiseWindowsSystem(HANDLE hInstance, int nCmdShow, int WinInitMode)
 int ExitWindowsSystem()
 {
 	if (joy != NULL) {
-		SDL_JoystickClose(joy);
+		SDL_CloseJoystick(joy);
 	}
 
 	if (FullscreenTexture != 0) {
@@ -875,12 +869,12 @@ int ExitWindowsSystem()
 	load_ogl_functions(0);
 	
 	if (surface != NULL) {
-		SDL_FreeSurface(surface);
+		SDL_DestroySurface(surface);
 	}
 	surface = NULL;
 
 	if (context != NULL) {
-		SDL_GL_DeleteContext(context);
+		SDL_GL_DestroyContext(context);
 	}
 	context = NULL;
 
@@ -921,57 +915,57 @@ static int KeySymToKey(int keysym)
 		case SDLK_9:
 			return KEY_9;
 		
-		case SDLK_a:
+		case SDLK_A:
 			return KEY_A;
-		case SDLK_b:
+		case SDLK_B:
 			return KEY_B;
-		case SDLK_c:
+		case SDLK_C:
 			return KEY_C;
-		case SDLK_d:
+		case SDLK_D:
 			return KEY_D;
-		case SDLK_e:
+		case SDLK_E:
 			return KEY_E;
-		case SDLK_f:
+		case SDLK_F:
 			return KEY_F;
-		case SDLK_g:
+		case SDLK_G:
 			return KEY_G;
-		case SDLK_h:
+		case SDLK_H:
 			return KEY_H;
-		case SDLK_i:
+		case SDLK_I:
 			return KEY_I;
-		case SDLK_j:
+		case SDLK_J:
 			return KEY_J;
-		case SDLK_k:
+		case SDLK_K:
 			return KEY_K;
-		case SDLK_l:
+		case SDLK_L:
 			return KEY_L;
-		case SDLK_m:
+		case SDLK_M:
 			return KEY_M;
-		case SDLK_n:
+		case SDLK_N:
 			return KEY_N;
-		case SDLK_o:
+		case SDLK_O:
 			return KEY_O;
-		case SDLK_p:
+		case SDLK_P:
 			return KEY_P;
-		case SDLK_q:
+		case SDLK_Q:
 			return KEY_Q;
-		case SDLK_r:
+		case SDLK_R:
 			return KEY_R;
-		case SDLK_s:
+		case SDLK_S:
 			return KEY_S;
-		case SDLK_t:
+		case SDLK_T:
 			return KEY_T;
-		case SDLK_u:
+		case SDLK_U:
 			return KEY_U;
-		case SDLK_v:
+		case SDLK_V:
 			return KEY_V;
-		case SDLK_w:
+		case SDLK_W:
 			return KEY_W;
-		case SDLK_x:
+		case SDLK_X:
 			return KEY_X;
-		case SDLK_y:
+		case SDLK_Y:
 			return KEY_Y;
-		case SDLK_z:
+		case SDLK_Z:
 			return KEY_Z;
 				
 		case SDLK_LEFT:
@@ -1066,9 +1060,9 @@ static int KeySymToKey(int keysym)
 			return KEY_RBRACKET;
 		case SDLK_SEMICOLON:
 			return KEY_SEMICOLON;
-		case SDLK_QUOTE:
+		case SDLK_APOSTROPHE:
 			return KEY_APOSTROPHE;
-		case SDLK_BACKQUOTE:
+		case SDLK_GRAVE:
 			return KEY_GRAVE;
 		case SDLK_BACKSLASH:
 			return KEY_BACKSLASH;
@@ -1177,7 +1171,8 @@ static void handle_keypress(int key, int unicode, int press)
 void CheckForWindowsMessages()
 {
 	SDL_Event event;
-	int x, y, buttons, wantmouse;
+	float x, y, wantmouse;
+	int buttons;
 	
 	GotAnyKey = 0;
 	DebouncedGotAnyKey = 0;
@@ -1191,11 +1186,11 @@ void CheckForWindowsMessages()
 	
 	while (SDL_PollEvent(&event)) {
 		switch(event.type) {
-			case SDL_MOUSEBUTTONDOWN:
+			case SDL_EVENT_MOUSE_BUTTON_DOWN:
 				break;
-			case SDL_MOUSEBUTTONUP:
+			case SDL_EVENT_MOUSE_BUTTON_UP:
 				break;
-			case SDL_MOUSEWHEEL:
+			case SDL_EVENT_MOUSE_WHEEL:
 				if (wantmouse) {
 					if (event.wheel.y < 0) {
 						handle_keypress(KEY_MOUSEWHEELDOWN, 0, 1);
@@ -1204,7 +1199,7 @@ void CheckForWindowsMessages()
 					}
 				}
 				break;
-			case SDL_TEXTINPUT: {
+			case SDL_EVENT_TEXT_INPUT: {
 					int unicode = event.text.text[0]; //TODO convert to utf-32
 					if (unicode && !(unicode & 0xFF80)) {
 						RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_CHAR(unicode);
@@ -1212,44 +1207,40 @@ void CheckForWindowsMessages()
 					}
 				}
 				break;
-			case SDL_KEYDOWN:
-				if (event.key.keysym.sym == SDLK_PRINTSCREEN) {
+			case SDL_EVENT_KEY_DOWN:
+				if (event.key.key == SDLK_PRINTSCREEN) {
 					if (HavePrintScn == 0)
 						GotPrintScn = 1;
 					HavePrintScn = 1;
 				} else {
-					handle_keypress(KeySymToKey(event.key.keysym.sym), 0, 1);
+					handle_keypress(KeySymToKey(event.key.key), 0, 1);
 				}
 				break;
-			case SDL_KEYUP:
-				if (event.key.keysym.sym == SDLK_PRINTSCREEN) {
+			case SDL_EVENT_KEY_UP:
+				if (event.key.key == SDLK_PRINTSCREEN) {
 					GotPrintScn = 0;
 					HavePrintScn = 0;
 				} else {
-					handle_keypress(KeySymToKey(event.key.keysym.sym), 0, 0);
+					handle_keypress(KeySymToKey(event.key.key), 0, 0);
 				}
 				break;
-			case SDL_WINDOWEVENT:
-				switch (event.window.event) {
-					case SDL_WINDOWEVENT_FOCUS_LOST:
-						// disable mouse grab?
-						break;
-					case SDL_WINDOWEVENT_RESIZED:
-						//printf("test, %d,%d\n", event.window.data1, event.window.data2);
-						WindowWidth = event.window.data1;
-						WindowHeight = event.window.data2;
-						if (RenderingMode == RENDERING_MODE_SOFTWARE) {
-							SetWindowSize(WindowWidth, WindowHeight, 640, 480);
-						} else {
-							SetWindowSize(WindowWidth, WindowHeight, WindowWidth, WindowHeight);
-						}
-						if (pglViewport != NULL) {
-							pglViewport(0, 0, WindowWidth, WindowHeight);
-						}
-						break;
-				}
+			case SDL_EVENT_WINDOW_FOCUS_LOST:
+					// disable mouse grab?
 				break;
-			case SDL_QUIT:
+			case SDL_EVENT_WINDOW_RESIZED:
+					//printf("test, %d,%d\n", event.window.data1, event.window.data2);
+					WindowWidth = event.window.data1;
+					WindowHeight = event.window.data2;
+					if (RenderingMode == RENDERING_MODE_SOFTWARE) {
+						SetWindowSize(WindowWidth, WindowHeight, 640, 480);
+					} else {
+						SetWindowSize(WindowWidth, WindowHeight, WindowWidth, WindowHeight);
+					}
+					if (pglViewport != NULL) {
+						pglViewport(0, 0, WindowWidth, WindowHeight);
+					}
+				break;
+			case SDL_EVENT_QUIT:
 				AvP.MainLoopRunning = 0; /* TODO */
 				exit(0); //TODO
 				break;
@@ -1283,15 +1274,16 @@ void CheckForWindowsMessages()
 	}
 
 	if (GotJoystick) {
-		int numbuttons;
+		float numbuttons;
+		int x;
 		
-		SDL_JoystickUpdate();
+		SDL_UpdateJoysticks();
 		
-		numbuttons = SDL_JoystickNumButtons(joy);
+		numbuttons = SDL_GetNumJoystickButtons(joy);
 		if (numbuttons > 16) numbuttons = 16;
 		
 		for (x = 0; x < numbuttons; x++) {
-			if (SDL_JoystickGetButton(joy, x)) {
+			if (SDL_GetJoystickButton(joy, x)) {
 				GotAnyKey = 1;
 				if (!KeyboardInput[KEY_JOYSTICK_BUTTON_1+x]) {
 					KeyboardInput[KEY_JOYSTICK_BUTTON_1+x] = 1;
@@ -1308,15 +1300,15 @@ void CheckForWindowsMessages()
 		if (WantFullscreenToggle != 0) {
 			int displayMode = SDL_GetWindowFlags(window);
 			//printf("Current window mode:%08x\n", displayMode);
-			if ((displayMode & (SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0) {
+			if ((displayMode & (SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN)) != 0) {
 				SDL_SetWindowFullscreen(window, 0);
 			} else {
-				SDL_SetWindowFullscreen(window, WantResolutionChange ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_FULLSCREEN_DESKTOP);
+				SDL_SetWindowFullscreen(window, WantResolutionChange ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_FULLSCREEN);
 			}
 
 			displayMode = SDL_GetWindowFlags(window);
 			//printf("New window mode:%08x\n", displayMode);
-			if ((displayMode & (SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0) {
+			if ((displayMode & (SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN)) != 0) {
 				SDL_SetRelativeMouseMode(SDL_TRUE);
 				WantFullscreen = 1;
 			} else {
@@ -1327,7 +1319,7 @@ void CheckForWindowsMessages()
 	}
 
 	if (KeyboardInput[KEY_LEFTCTRL] && DebouncedKeyboardInput[KEY_G]) {
-		int IsWindowed = (SDL_GetWindowFlags(window) & (SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN_DESKTOP)) == 0;
+		int IsWindowed = (SDL_GetWindowFlags(window) & (SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN)) == 0;
 
 		if (IsWindowed) {
 			WantMouseGrab = WantMouseGrab != 0 ? 0 : 1;
