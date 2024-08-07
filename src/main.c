@@ -1171,7 +1171,8 @@ static void handle_keypress(int key, int unicode, int press)
 void CheckForWindowsMessages()
 {
 	SDL_Event event;
-	int x, y, buttons, wantmouse;
+	float x, y, wantmouse;
+	int buttons;
 	
 	GotAnyKey = 0;
 	DebouncedGotAnyKey = 0;
@@ -1273,7 +1274,8 @@ void CheckForWindowsMessages()
 	}
 
 	if (GotJoystick) {
-		int numbuttons;
+		float numbuttons;
+		int x;
 		
 		SDL_UpdateJoysticks();
 		
