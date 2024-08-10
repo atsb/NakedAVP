@@ -46,8 +46,8 @@ typedef struct HuffNode // 16-byte node structure
 
 typedef struct
 {
-    long wid;
-    long bits;
+    int64_t wid;
+    int64_t bits;
 
 } HuffEncode;
 

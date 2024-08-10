@@ -146,7 +146,7 @@ BOOL Object_Chunk::deassoc_with_shape (Shape_Chunk * shpch)
 
 BOOL Object_Chunk::file_equals(HANDLE &rif_file)
 {
-	unsigned long bytes_read;
+	uint64_t bytes_read;
 	char name[50];
 
 	// get header list
@@ -159,11 +159,11 @@ BOOL Object_Chunk::file_equals(HANDLE &rif_file)
 #ifdef _WIN32
 	SetFilePointer(rif_file, obhead.first_entry() + 96, 0, FILE_BEGIN);
 	int i = 0;
-	do ReadFile(rif_file, (long*)(name + i), 1, &bytes_read, 0);
+	do ReadFile(rif_file, (int64_t*)(name + i), 1, &bytes_read, 0);
 #else
 	AVPSetFilePointer(rif_file, obhead.first_entry() + 96, 0, FILE_BEGIN);
 	int i = 0;
-	do AVPReadFile(rif_file, (long*)(name + i), 1, &bytes_read, 0);
+	do AVPReadFile(rif_file, (int64_t*)(name + i), 1, &bytes_read, 0);
 #endif
 
 	while (name[i++] != 0);
@@ -491,16 +491,16 @@ size_t Object_Header_Chunk::size_chunk()
 
 BOOL Object_Header_Chunk::output_chunk (HANDLE & hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -622,16 +622,16 @@ Object_Notes_Chunk::~Object_Notes_Chunk ()
 
 BOOL Object_Notes_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -1126,9 +1126,9 @@ Object_Track_Sound_Chunk::Object_Track_Sound_Chunk(Chunk_With_Children* parent)
 Object_Track_Sound_Chunk::Object_Track_Sound_Chunk(Chunk_With_Children* const parent,const char* data,size_t const )
 :Chunk(parent,"TRAKSOUN")
 {
-	inner_range=*(unsigned long*)data;
+	inner_range=*(uint64_t*)data;
 	data+=4;
-	outer_range=*(unsigned long*)data;
+	outer_range=*(uint64_t*)data;
 	data+=4;
 
 	max_volume=*(int*)data;
@@ -1157,9 +1157,9 @@ void Object_Track_Sound_Chunk::fill_data_block(char* data_start)
 	*((int *) data_start) = chunk_size;
 	data_start += 4;
 	
-	*(unsigned long*)data_start=inner_range;
+	*(uint64_t*)data_start=inner_range;
 	data_start+=4;
-	*(unsigned long*)data_start=outer_range;
+	*(uint64_t*)data_start=outer_range;
 	data_start+=4;
 
 	*(int*)data_start=max_volume;

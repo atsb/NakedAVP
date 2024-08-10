@@ -89,20 +89,20 @@ static unsigned char const overrun_code [] = { 0xef, 0x94, 0x56, 0x27, 0xf6, 0x7
 
 
 typedef struct{
-  unsigned long addr;
-  unsigned long size;
+  uint64_t addr;
+  uint64_t size;
   #if COPY_FILENAME
   char filename[40];
   #else
   char const * filename; /* JH 30/5/97 - since __FILE__ generates a string in the executable, to which we get passed a pointer, we don't need to make another copy unnecessarily wasting 720K of space on PC !! */
   #endif
-  unsigned long linenum;
+  uint64_t linenum;
 }MALLOC_RECORD;
 
 /* globals */
 MALLOC_RECORD MallocRecord[MAXMALLOCS];
-unsigned long TotalMemAllocated = 0;
-unsigned long TotalMallocNum = 0;
+uint64_t TotalMemAllocated = 0;
+uint64_t TotalMallocNum = 0;
 
 /* extern function declarations */
 extern int textprint(const char* string, ...);
@@ -113,13 +113,13 @@ extern void WaitForReturn(void);
 
 /* function declarations */
 #if COPY_FILENAME
-void record_free(void *ptr, char string[], unsigned long lineno);
-void *record_malloc(long size, char string[], unsigned long lineno);
-static int AdjustMallocRecord(unsigned long addr, long size, char string[], unsigned long lineno);
+void record_free(void *ptr, char string[], uint64_t lineno);
+void *record_malloc(int64_t size, char string[], uint64_t lineno);
+static int AdjustMallocRecord(uint64_t addr, int64_t size, char string[], uint64_t lineno);
 #else /* new prototypes to take just pointers - dunno if it's really necessary */
-void record_free(void *ptr, char const * string, unsigned long lineno);
-void *record_malloc(long size, char const * string, unsigned long lineno);
-static int AdjustMallocRecord(unsigned long addr, long size, char const * string, unsigned long lineno);
+void record_free(void *ptr, char const * string, uint64_t lineno);
+void *record_malloc(int64_t size, char const * string, uint64_t lineno);
+static int AdjustMallocRecord(uint64_t addr, int64_t size, char const * string, uint64_t lineno);
 #endif
 void DumpMallocInfo(int type);
 static void InitMallocRecords(void);
@@ -127,9 +127,9 @@ static void InitMallocRecords(void);
 /* function definitions */
 
 #if COPY_FILENAME
-void *record_malloc(long size, char string[], unsigned long lineno)
+void *record_malloc(int64_t size, char string[], uint64_t lineno)
 #else
-void *record_malloc(long size, char const * string, unsigned long lineno)
+void *record_malloc(int64_t size, char const * string, uint64_t lineno)
 #endif
 {
   #ifdef OVERRUN_SIZE
@@ -151,9 +151,9 @@ void *record_malloc(long size, char const * string, unsigned long lineno)
 }
 
 #if COPY_FILENAME
-void record_free(void *ptr, char string[], unsigned long lineno)
+void record_free(void *ptr, char string[], uint64_t lineno)
 #else
-void record_free(void *ptr, char const * string, unsigned long lineno)
+void record_free(void *ptr, char const * string, uint64_t lineno)
 #endif
 {
   if(AdjustMallocRecord((long)ptr,FREEING_MEMORY, string, lineno))
@@ -162,9 +162,9 @@ void record_free(void *ptr, char const * string, unsigned long lineno)
 }
 
 #if COPY_FILENAME
-static int AdjustMallocRecord(unsigned long addr, long size, char string[], unsigned long lineno)
+static int AdjustMallocRecord(uint64_t addr, int64_t size, char string[], uint64_t lineno)
 #else
-static int AdjustMallocRecord(unsigned long addr, long size, char const * string, unsigned long lineno)
+static int AdjustMallocRecord(uint64_t addr, int64_t size, char const * string, uint64_t lineno)
 #endif
 {
 

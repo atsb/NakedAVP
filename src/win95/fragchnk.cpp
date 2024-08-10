@@ -176,9 +176,9 @@ Fragment_Type_Sound_Chunk::Fragment_Type_Sound_Chunk(Chunk_With_Children* parent
 Fragment_Type_Sound_Chunk::Fragment_Type_Sound_Chunk(Chunk_With_Children* const parent,const char* data,size_t const )
 :Chunk(parent,"FRGSOUND")
 {
-	inner_range=*(unsigned long*)data;
+	inner_range=*(uint64_t*)data;
 	data+=4;
-	outer_range=*(unsigned long*)data;
+	outer_range=*(uint64_t*)data;
 	data+=4;
 
 	max_volume=*(int*)data;
@@ -205,9 +205,9 @@ void Fragment_Type_Sound_Chunk::fill_data_block(char* data_start)
 	*((int *) data_start) = chunk_size;
 	data_start += 4;
 	
-	*(unsigned long*)data_start=inner_range;
+	*(uint64_t*)data_start=inner_range;
 	data_start+=4;
-	*(unsigned long*)data_start=outer_range;
+	*(uint64_t*)data_start=outer_range;
 	data_start+=4;
 
 	*(int*)data_start=max_volume;

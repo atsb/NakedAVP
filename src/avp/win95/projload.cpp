@@ -3130,7 +3130,7 @@ void LoadModuleData()
 /* TODO: dir separator */
  	HANDLE file = AVPCreateFile ("avp_rifs/module.bbb", GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
  					FILE_FLAG_RANDOM_ACCESS, 0);
-	unsigned long byteswritten;
+    uint64_t byteswritten;
 #ifdef _WIN32
 	WriteFile(file, &Global_VDB_Ptr->VDB_World, sizeof(VECTORCH), &byteswritten, 0);
 	WriteFile(file, &Global_VDB_Ptr->VDB_Mat, sizeof(MATRIXCH), &byteswritten, 0);
@@ -3157,7 +3157,7 @@ void LoadModuleData()
 	int file_size=AVPGetFileSize(file,0);
 	GLOBALASSERT((file_size % 4)==0);
 	int pos=0;
-	unsigned long bytesread;
+    uint64_t bytesread;
 	{
 		char name[60];
         AVPReadFile(file,name,60,&bytesread,0);
@@ -3358,7 +3358,7 @@ int get_object_index_from_module_index(List<Object_Chunk*>& ob_list,int index)
 static BOOL WarnedAboutDiskSpace=FALSE;
 static void MakeBackupFile(File_Chunk* fc)
 {
-	unsigned long spc,bps,numclust,total;
+    uint64_t spc,bps,numclust,total;
 #ifdef _WIN32
 	if (GetDiskFreeSpace(0, &spc, &bps, &numclust, &total))
 #else

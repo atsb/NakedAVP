@@ -51,8 +51,8 @@ static struct {
 typedef struct FormatChunk {
   short          wFormatTag;
   unsigned short wChannels;
-  unsigned long  dwSamplesPerSec;
-  unsigned long  dwAvgBytesPerSec;
+  uint64_t  dwSamplesPerSec;
+  uint64_t  dwAvgBytesPerSec;
   unsigned short wBlockAlign;
   unsigned short wBitsPerSample;
 } FormatChunk;

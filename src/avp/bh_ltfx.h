@@ -11,23 +11,23 @@ typedef struct light_fx_behav_block
 	LIGHT_FX_TYPE type;
 	LIGHT_FX_STATE current_state;
 	
-	unsigned long fade_up_speed;
-	unsigned long fade_down_speed;
+    uint32_t fade_up_speed;
+    uint32_t fade_down_speed;
 	
-	unsigned long post_fade_up_delay;
-	unsigned long post_fade_down_delay;
+    uint32_t post_fade_up_delay;
+    uint32_t post_fade_down_delay;
 	
-	unsigned long fade_up_speed_multiplier;
-	unsigned long fade_down_speed_multiplier;
+    uint32_t fade_up_speed_multiplier;
+    uint32_t fade_down_speed_multiplier;
 	
-	unsigned long post_fade_up_delay_multiplier;
-	unsigned long post_fade_down_delay_multiplier;
+    uint32_t post_fade_up_delay_multiplier;
+    uint32_t post_fade_down_delay_multiplier;
 	
-	signed long multiplier;
-	unsigned long timer;
-	unsigned long timer2;
+    int32_t multiplier;
+    uint32_t timer;
+    uint32_t timer2;
 	
-	signed long time_to_next_flicker_state;
+    int32_t time_to_next_flicker_state;
 
 	TXACTRLBLK *anim_control;
 } LIGHT_FX_BEHAV_BLOCK;

@@ -904,7 +904,7 @@ extern unsigned char *ExtractWavFile(int soundIndex, unsigned char *bufferPtr);
 void *LoadRebSndFile(char *filename)
 {
 	void *bufferPtr;
-	long int save_pos, size_of_file;
+	int64_t save_pos, size_of_file;
 	FILE *fp;
 	fp = OpenGameFile(filename, FILEMODE_READONLY, FILETYPE_PERM);
 	

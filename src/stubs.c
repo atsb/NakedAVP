@@ -134,7 +134,7 @@ void MinimizeAllDDGraphics()
 
         
 /* dd_func.cpp */
-long BackBufferPitch;
+int64_t BackBufferPitch;
 int VideoModeColourDepth;
 
 void BlitWin95Char(int x, int y, unsigned char toprint)

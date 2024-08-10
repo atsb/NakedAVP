@@ -12,8 +12,8 @@
 
 typedef struct placed_hierarchy_sound
 {
-	unsigned long inner_range;
-	unsigned long outer_range;
+    uint32_t inner_range;
+    uint32_t outer_range;
 	int max_volume;
 	int	pitch;
 	

@@ -4717,7 +4717,7 @@ struct STARDESC Star[NUMBER_OF_STARS];
 static void DrawStar(int x, int y)
 {
 	extern unsigned char *ScreenBuffer;
-	extern long BackBufferPitch;
+	extern int64_t BackBufferPitch;
 
 	int xi,xf,xfm,yi,yf,yfm;
 
@@ -4796,7 +4796,7 @@ extern void DrawMainMenusBackdrop(void)
 	#else
 	extern DDPIXELFORMAT DisplayPixelFormat;
 	extern unsigned char *ScreenBuffer;
-	extern long BackBufferPitch;
+	extern int64_t BackBufferPitch;
 //      LockSurfaceAndGetBufferPointer();
 	{
 		unsigned int *screenPtr;
@@ -4938,7 +4938,7 @@ void RenderPixel(int x,int y,int r,int g,int b)
 #if 0
 	extern DDPIXELFORMAT DisplayPixelFormat;
 	extern unsigned char *ScreenBuffer;
-	extern long BackBufferPitch;
+	extern int64_t BackBufferPitch;
 
 	unsigned short colour;
 
@@ -4955,7 +4955,7 @@ void BezierCurve(void)
 {
 	int i;
 	extern unsigned char *ScreenBuffer;
-	extern long BackBufferPitch;
+	extern int64_t BackBufferPitch;
 	static b=0;
 	for (i=0; i<=255; i++)
 	{

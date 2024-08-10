@@ -2083,8 +2083,8 @@ dx = 0; /* TODO: uninitialized?? */
 		x = v0[0];
 		z = v0[1];
 
-		IntToLL(&xx_tmp, &x);		/* xx_tmp = (long long)x */
-		IntToLL(&zz_tmp, &z);		/* zz_tmp = (long long)z */
+		IntToLL(&xx_tmp, &x);		/* xx_tmp = (uint64_t)x */
+		IntToLL(&zz_tmp, &z);		/* zz_tmp = (uint64_t)z */
 
 		ADD_LL_PP(&xx, &xx_tmp);	/* xx += xx_tmp */
 		ADD_LL_PP(&zz, &zz_tmp);	/* zz += zz_tmp */
@@ -2334,7 +2334,7 @@ void SetFastRandom(void)
 {
 
 	int i;
-	long number = GetTickCount();
+    int64_t number = GetTickCount();
 
 
 	for(i = 0; i < DEG_3; ++i) {
@@ -2513,9 +2513,9 @@ void PolyAveragePoint(POLYHEADER *pheader, int *spts, VECTORCH *apt)
 		y = *(spts + *mypolystart + iy);
 		z = *(spts + *mypolystart + iz);
 
-		IntToLL(&xx_tmp, &x);		/* xx_tmp = (long long)x */
-		IntToLL(&yy_tmp, &y);		/* yy_tmp = (long long)y */
-		IntToLL(&zz_tmp, &z);		/* zz_tmp = (long long)z */
+		IntToLL(&xx_tmp, &x);		/* xx_tmp = (uint64_t)x */
+		IntToLL(&yy_tmp, &y);		/* yy_tmp = (uint64_t)y */
+		IntToLL(&zz_tmp, &z);		/* zz_tmp = (uint64_t)z */
 
 		ADD_LL_PP(&xx, &xx_tmp);	/* xx += xx_tmp */
 		ADD_LL_PP(&yy, &yy_tmp);	/* yy += yy_tmp */

@@ -328,7 +328,7 @@ void Shape_Chunk::destroy_auxiliary_chunks()
 
 BOOL Shape_Chunk::file_equals(HANDLE &rif_file)
 {
-	unsigned long bytes_read;
+	uint64_t bytes_read;
 	int id;
 	Shape_Header_Chunk * hdptr = get_header();
 
@@ -343,10 +343,10 @@ BOOL Shape_Chunk::file_equals(HANDLE &rif_file)
 	// get object identifier
 #ifdef _WIN32
 	SetFilePointer(rif_file, obhead.first_entry() + 32, 0, FILE_BEGIN);
-	ReadFile(rif_file, (long*)&(id), 4, &bytes_read, 0);
+	ReadFile(rif_file, (int64_t*)&(id), 4, &bytes_read, 0);
 #else
 	AVPSetFilePointer(rif_file, obhead.first_entry() + 32, 0, FILE_BEGIN);
-	AVPReadFile(rif_file, (long*)&(id), 4, &bytes_read, 0);
+	AVPReadFile(rif_file, (int64_t*)&(id), 4, &bytes_read, 0);
 #endif
 
 	if (hdptr->file_id_num == id) return TRUE;
@@ -614,16 +614,16 @@ Shape_Vertex_Chunk::Shape_Vertex_Chunk(Anim_Shape_Frame_Chunk * parent, const ch
 
 BOOL Shape_Vertex_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -698,16 +698,16 @@ Shape_Vertex_Normal_Chunk::Shape_Vertex_Normal_Chunk(Shape_Sub_Shape_Chunk * par
 
 BOOL Shape_Vertex_Normal_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -799,16 +799,16 @@ Shape_Polygon_Normal_Chunk::Shape_Polygon_Normal_Chunk(Anim_Shape_Frame_Chunk * 
 
 BOOL Shape_Polygon_Normal_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -940,16 +940,16 @@ Shape_Polygon_Chunk::Shape_Polygon_Chunk (Console_Shape_Chunk * parent, const ch
 
 BOOL Shape_Polygon_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -1140,16 +1140,16 @@ uv_data (NULL), num_uvs (*((int *) uvdata))
 
 BOOL Shape_UV_Coord_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -1252,16 +1252,16 @@ tex_fns (), num_tex_fns (*((int *) tfndata))
 
 BOOL Shape_Texture_Filenames_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -1397,16 +1397,16 @@ size_t Shape_Header_Chunk::size_chunk()
 
 BOOL Shape_Header_Chunk::output_chunk(HANDLE & hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;

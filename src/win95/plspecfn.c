@@ -728,7 +728,7 @@ int FindShift64(LONGLONGCH *value, LONGLONGCH *limit)
 
  MaxLONGLONGCH
 
- Return a pointer to the largest value of a long long array
+ Return a pointer to the largest value of a uint64_t array
 
 */
 

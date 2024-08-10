@@ -125,16 +125,16 @@ void Strategy_Chunk::fill_data_block(char* data_start)
 
 BOOL Map_Block_Chunk::output_chunk(HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -146,16 +146,16 @@ BOOL Map_Block_Chunk::output_chunk(HANDLE &hand)
 
 BOOL Strategy_Chunk::output_chunk(HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;

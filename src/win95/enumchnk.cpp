@@ -89,16 +89,16 @@ Enum_Header_Chunk::Enum_Header_Chunk (Chunk_With_Children * parent, const char *
 
 BOOL Enum_Header_Chunk::output_chunk (HANDLE & hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;

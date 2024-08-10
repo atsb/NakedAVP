@@ -152,8 +152,8 @@ void Shape_Fragment_Type::Setup_sh_frags(Fragment_Type_Chunk* ftc)
 		
 		sh_fragdesc->sh_fragsound=(SHAPEFRAGMENTSOUND*)PoolAllocateMem(sizeof(SHAPEFRAGMENTSOUND));
 		sh_fragdesc->sh_fragsound->sound_loaded=GetSoundForMainRif (ftsoc->wav_name);
-		sh_fragdesc->sh_fragsound->inner_range=(unsigned long)(ftsoc->inner_range*local_scale);
-		sh_fragdesc->sh_fragsound->outer_range=(unsigned long)(ftsoc->outer_range*local_scale);
+		sh_fragdesc->sh_fragsound->inner_range=(uint64_t)(ftsoc->inner_range*local_scale);
+		sh_fragdesc->sh_fragsound->outer_range=(uint64_t)(ftsoc->outer_range*local_scale);
 		sh_fragdesc->sh_fragsound->pitch=ftsoc->pitch;
 		sh_fragdesc->sh_fragsound->max_volume=ftsoc->max_volume;
 
@@ -950,8 +950,8 @@ CTM_ReturnType copy_to_mainshapelist(RIFFHANDLE h, Shape_Chunk * tmpshp, int fla
 				{
 					mainshapelist[main_shape_num]->sh_fragdesc->sh_fragsound=(SHAPEFRAGMENTSOUND*)PoolAllocateMem(sizeof(SHAPEFRAGMENTSOUND));
 					mainshapelist[main_shape_num]->sh_fragdesc->sh_fragsound->sound_loaded=GetSoundForMainRif (ftsoc->wav_name);
-					mainshapelist[main_shape_num]->sh_fragdesc->sh_fragsound->inner_range=(unsigned long)(ftsoc->inner_range*local_scale);
-					mainshapelist[main_shape_num]->sh_fragdesc->sh_fragsound->outer_range=(unsigned long)(ftsoc->outer_range*local_scale);
+					mainshapelist[main_shape_num]->sh_fragdesc->sh_fragsound->inner_range=(uint64_t)(ftsoc->inner_range*local_scale);
+					mainshapelist[main_shape_num]->sh_fragdesc->sh_fragsound->outer_range=(uint64_t)(ftsoc->outer_range*local_scale);
 					mainshapelist[main_shape_num]->sh_fragdesc->sh_fragsound->pitch=ftsoc->pitch;
 					mainshapelist[main_shape_num]->sh_fragdesc->sh_fragsound->max_volume=ftsoc->max_volume;
 				}

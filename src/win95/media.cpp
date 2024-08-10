@@ -190,7 +190,7 @@ unsigned MediaStdFileMedium::GetRemainingSize()
 		return 0;
 	}
 	
-	long nPos = ftell(m_pFile);
+    int64_t nPos = ftell(m_pFile);
 	
 	if (-1L == nPos || fseek(m_pFile,0,SEEK_END))
 	{
@@ -198,7 +198,7 @@ unsigned MediaStdFileMedium::GetRemainingSize()
 		return 0;
 	}
 	
-	long nSize = ftell(m_pFile);
+    int64_t nSize = ftell(m_pFile);
 	
 	fseek(m_pFile,nPos,SEEK_SET);
 	
@@ -311,7 +311,7 @@ void MediaStdFileMedium::DoReadBlock(void * pData, unsigned nSize)
 
 unsigned MediaStdFileMedium::DoGetPos()
 {
-	long nFilePos = ftell(m_pFile);
+    int64_t nFilePos = ftell(m_pFile);
 	
 	if (-1L == nFilePos)
 	{

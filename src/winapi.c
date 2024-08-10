@@ -71,11 +71,11 @@ HANDLE AVPCreateFileA(const char *file, int write, int x, int y, int flags, int 
 
 int AVPWriteFile(HANDLE file, const void *data, int len, void *byteswritten, int lpOverlapped)
 {
-	unsigned long *bw, i;
+	uint64_t *bw, i;
 	
 	fprintf(stderr, "WriteFile(%d, %p, %d, %p, %d)\n", file, data, len, byteswritten, lpOverlapped);
 
-	bw = (unsigned long *)byteswritten;
+	bw = (uint64_t *)byteswritten;
 	*bw = 0;
 	
 	i = write(file, data, len);
@@ -89,11 +89,11 @@ int AVPWriteFile(HANDLE file, const void *data, int len, void *byteswritten, int
 
 int AVPReadFile(HANDLE file, void *data, int len, void *bytesread, int lpOverlapped)
 {
-	unsigned long *br, i;
+	uint64_t *br, i;
 	
 	fprintf(stderr, "ReadFile(%d, %p, %d, %p, %d)\n", file, data, len, bytesread, lpOverlapped);
 
-	br = (unsigned long *)bytesread;
+	br = (uint64_t *)bytesread;
 	*br = 0;
 	
 	i = read(file, data, len);
@@ -145,7 +145,7 @@ int AVPDeleteFileA(const char *file)
 	return AVPDeleteFile(file);
 }
 
-int AVPGetDiskFreeSpace(int x, unsigned long *a, unsigned long *b, unsigned long *c, unsigned long *d)
+int AVPGetDiskFreeSpace(int x, uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d)
 {
 	fprintf(stderr, "GetDiskFreeSpace(%d, %p, %p, %p, %p)\n", x, a, b, c, d);
 

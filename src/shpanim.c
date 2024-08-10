@@ -323,7 +323,7 @@ void InitShapeAnimationController (SHAPEANIMATIONCONTROLLER * sac, SHAPEHEADER *
 
 }
 
-void SetCurrentShapeAnimationToStop (DISPLAYBLOCK * dptr, unsigned long stop_now, signed long end_frame)
+void SetCurrentShapeAnimationToStop (DISPLAYBLOCK * dptr, uint64_t stop_now, int64_t end_frame)
 {
 	SHAPEANIMATIONCONTROLLER * sac = dptr->ShapeAnimControlBlock;
 
@@ -377,7 +377,7 @@ SHAPEANIMATIONCONTROLDATA const * GetNextShapeAnimationSequenceData (DISPLAYBLOC
 }
 
 
-void PauseCurrentShapeAnimation (DISPLAYBLOCK * dptr, unsigned long pause_now, signed long end_frame)
+void PauseCurrentShapeAnimation (DISPLAYBLOCK * dptr, uint64_t pause_now, int64_t end_frame)
 {
 	SHAPEANIMATIONCONTROLLER * sac = dptr->ShapeAnimControlBlock;
 

@@ -168,14 +168,14 @@ unsigned int SetNextShapeAnimationSequence (struct displayblock *, SHAPEANIMATIO
 
 // stop_now == 1 will cause the function to ignore the end_frame value
 // set end_frame to -1 for no change to the ending frame of the sequence
-void SetCurrentShapeAnimationToStop (struct displayblock *, unsigned long stop_now, signed long end_frame);
+void SetCurrentShapeAnimationToStop (struct displayblock *, uint64_t stop_now, int64_t end_frame);
 
 SHAPEANIMATIONCONTROLDATA const * GetCurrentShapeAnimationSequenceData (struct displayblock *);
 SHAPEANIMATIONCONTROLDATA const * GetNextShapeAnimationSequenceData (struct displayblock *);
 
 // pause_now == 1 will cause the function to ignore the end_frame value
 // set end_frame to -1 for no change to the ending frame of the sequence
-void PauseCurrentShapeAnimation (struct displayblock *, unsigned long pause_now, signed long end_frame);
+void PauseCurrentShapeAnimation (struct displayblock *, uint64_t pause_now, int64_t end_frame);
 void RestartCurrentShapeAnimation (struct displayblock *);
 
 // Please use these functions, whenever you create a block of each type

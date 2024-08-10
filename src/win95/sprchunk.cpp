@@ -83,16 +83,16 @@ Sprite_Action_Chunk::~Sprite_Action_Chunk()
 
 BOOL Sprite_Action_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -289,16 +289,16 @@ int Sprite_Header_Chunk::write_file(const char* fname)
 
 BOOL Sprite_Header_Chunk::output_chunk(HANDLE & hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -423,16 +423,16 @@ Sprite_Size_Chunk::Sprite_Size_Chunk(Chunk_With_Children* parent)
 
 BOOL Sprite_Size_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile (hand, (long *) data_block, (unsigned long) chunk_size, &junk, 0);
+	ok = WriteFile (hand, (int64_t *) data_block, (uint64_t) chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;
@@ -487,16 +487,16 @@ Sprite_Version_Number_Chunk::Sprite_Version_Number_Chunk(Chunk_With_Children* pa
 
 BOOL Sprite_Version_Number_Chunk::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
 	data_block = this->make_data_block_from_chunk();
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 
 	delete [] data_block;

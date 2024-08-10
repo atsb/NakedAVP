@@ -41,7 +41,7 @@ extern size_t  fflookb(void const * * ptr, size_t n, FFILE * fp);
 extern FFILE * ffopen(char const * filename, char const * mode);
 extern size_t  ffread(void * ptr, size_t size, size_t n, FFILE * fp);
 extern size_t  ffreadb(void * ptr, size_t n, FFILE * fp);
-extern int     ffseek(FFILE * fp, long offset, int whence);
+extern int     ffseek(FFILE * fp, int64_t offset, int whence);
 extern int     ffsetpos(FFILE * fp, ffpos_t const * pos);
 extern long    fftell(FFILE * fp);
 

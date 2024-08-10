@@ -261,7 +261,7 @@ Loaders/Unloaders for language internationalization code in language.c */
 char *LoadTextFile(char *filename)
 {
 	char *bufferPtr;
-	long int save_pos, size_of_file;
+	int64_t save_pos, size_of_file;
 	FILE *fp;
 	fp = OpenGameFile(filename, FILEMODE_READONLY, FILETYPE_PERM);
 	

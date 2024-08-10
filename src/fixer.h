@@ -171,7 +171,7 @@ int AVPGetFileSize(HANDLE file, int x);
 int AVPCloseHandle(HANDLE file);
 int AVPDeleteFile(const char *file);
 int AVPDeleteFileA(const char *file);
-int AVPGetDiskFreeSpace(int x, unsigned long *a, unsigned long *b, unsigned long *c, unsigned long *d);
+int AVPGetDiskFreeSpace(int x, uint64_t *a, uint64_t *b, uint64_t *c, uint64_t *d);
 int AVPCreateDirectory(char *dir, int x);
 int AVPMoveFile(const char *newfile, const char *oldfile);
 int AVPMoveFileA(const char *newfile, const char *oldfile);

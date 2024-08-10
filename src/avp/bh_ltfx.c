@@ -552,10 +552,10 @@ typedef struct light_fx_save_block
 	SAVE_BLOCK_STRATEGY_HEADER header;
 
 	LIGHT_FX_STATE current_state;
-	signed long multiplier;
-	unsigned long timer;
-	unsigned long timer2;
-	signed long time_to_next_flicker_state;
+    int32_t multiplier;
+    int32_t timer;
+    int32_t timer2;
+    int32_t time_to_next_flicker_state;
 
 }LIGHT_FX_SAVE_BLOCK;
 

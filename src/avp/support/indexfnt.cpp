@@ -40,8 +40,8 @@ extern void D3D_RenderHUDString_Clipped(char *stringPtr,int x,int y,int colour);
 	{
 #endif
 		extern unsigned char *ScreenBuffer;
-		extern long BackBufferPitch;
-#if 0	/* LINUX */	
+		extern int64_t BackBufferPitch;
+#if 0	/* LINUX */
 		extern LPDIRECTDRAWSURFACE lpDDSBack;
 		extern DDPIXELFORMAT DisplayPixelFormat;
 #endif		
@@ -480,8 +480,8 @@ IndexedFont_Kerned :: RenderString_Clipped
 							// okay, now we have the surfaces, we can copy from one to the other,
 							// darkening pixels as we go
 							{
-								long fontimagePitchInShorts = (ddsdimage.lPitch/2); 
-								long backbufferPitchInShorts = (BackBufferPitch/2); 
+                                int64_t fontimagePitchInShorts = (ddsdimage.lPitch/2);
+                                int64_t backbufferPitchInShorts = (BackBufferPitch/2);
 
 								unsigned short* fontimageRowStartPtr =
 								(
@@ -647,8 +647,8 @@ IndexedFont_Kerned :: RenderString_Unclipped
 							// okay, now we have the surfaces, we can copy from one to the other,
 							// darkening pixels as we go
 							{
-								long fontimagePitchInShorts = (ddsdimage.lPitch/2); 
-								long backbufferPitchInShorts = (BackBufferPitch/2); 
+                                int64_t fontimagePitchInShorts = (ddsdimage.lPitch/2);
+                                int64_t backbufferPitchInShorts = (BackBufferPitch/2); 
 
 								unsigned short* fontimageRowStartPtr =
 								(

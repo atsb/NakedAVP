@@ -439,12 +439,12 @@ size_t fflookb(void const * * ptr, size_t n, FFILE * fp)
 	return n;
 }
 
-int ffseek(FFILE * fp, long offset, int whence)
+int ffseek(FFILE * fp, int64_t offset, int whence)
 {
 	switch (whence)
 	{
 		case SEEK_SET:
-			if ((unsigned long)offset > fp->length || offset < 0)
+			if ((uint64_t)offset > fp->length || offset < 0)
 			{
 				fp->flag |= FFF_ERR;
 				errno = EDOM;

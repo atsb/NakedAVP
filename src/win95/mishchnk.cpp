@@ -34,7 +34,7 @@ BOOL Lockable_Chunk_With_Children::lock_chunk(File_Chunk & fchunk)
 	if (updated_outside || external_lock) return FALSE;
 
 	HANDLE rif_file;
-	unsigned long bytes_read;
+	uint64_t bytes_read;
 
 	int tries = 0;
 	
@@ -94,11 +94,11 @@ BOOL Lockable_Chunk_With_Children::lock_chunk(File_Chunk & fchunk)
 
 			// go to lock status in header
 			SetFilePointer(rif_file,obhead.first_entry() + 12,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
 			SetFilePointer(rif_file,-4,0,FILE_CURRENT);
 			flags |= GENERAL_FLAG_LOCKED;
-			WriteFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
-			WriteFile (rif_file, (long *) &users_name[0], 16, &bytes_read, 0);
+			WriteFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
+			WriteFile (rif_file, (int64_t *) &users_name[0], 16, &bytes_read, 0);
 		}
 
 	}
@@ -127,7 +127,7 @@ BOOL Lockable_Chunk_With_Children::unlock_chunk (File_Chunk & fchunk, BOOL updat
 		if (updated_outside || external_lock) return FALSE;
 
 		HANDLE rif_file;
-		unsigned long bytes_read;
+		uint64_t bytes_read;
 	
 		rif_file = CreateFile (fchunk.filename, GENERIC_WRITE + GENERIC_READ, 0, 0, OPEN_EXISTING, 
 							FILE_FLAG_RANDOM_ACCESS, 0);
@@ -173,11 +173,11 @@ BOOL Lockable_Chunk_With_Children::unlock_chunk (File_Chunk & fchunk, BOOL updat
 
 				// go to lock status in header
 				SetFilePointer(rif_file,obhead.first_entry() + 12,0,FILE_BEGIN);
-				ReadFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
+				ReadFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
 				SetFilePointer(rif_file,-4,0,FILE_CURRENT);
 				flags &= ~GENERAL_FLAG_LOCKED;
-				WriteFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
-				WriteFile (rif_file, (long *) &users_name[0], 16, &bytes_read, 0);
+				WriteFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
+				WriteFile (rif_file, (int64_t *) &users_name[0], 16, &bytes_read, 0);
 			}
 
 		}
@@ -197,7 +197,7 @@ BOOL Lockable_Chunk_With_Children::unlock_chunk (File_Chunk & fchunk, BOOL updat
 BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 {
 
-	unsigned long bytes_read;
+	uint64_t bytes_read;
 	int length = 0;
 
 	const char * hd_id = get_head_id();
@@ -227,13 +227,13 @@ BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 #ifdef _WIN32
 			SetFilePointer(rif_file, sfpl() + 8, 0, FILE_BEGIN);
 
-			ReadFile(rif_file, (long*)&(length), 4, &bytes_read, 0);
+			ReadFile(rif_file, (int64_t*)&(length), 4, &bytes_read, 0);
 
 			SetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
 #else
 			AVPSetFilePointer(rif_file, sfpl() + 8, 0, FILE_BEGIN);
 
-			AVPReadFile(rif_file, (long*)&(length), 4, &bytes_read, 0);
+			AVPReadFile(rif_file, (int64_t*)&(length), 4, &bytes_read, 0);
 
 			AVPSetFilePointer(rif_file, sfpl(), 0, FILE_BEGIN);
 #endif
@@ -268,9 +268,9 @@ BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 			tempbuffer = new char [file_length - (sfpl() + length)];
 
 #ifdef _WIN32
-			ReadFile(rif_file, (long*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+			ReadFile(rif_file, (int64_t*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
 #else
-			AVPReadFile(rif_file, (long*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+			AVPReadFile(rif_file, (int64_t*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
 #endif
 
 
@@ -287,9 +287,9 @@ BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 			}
 			
 #ifdef _WIN32
-			WriteFile(rif_file, (long*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+			WriteFile(rif_file, (int64_t*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
 #else
-			AVPWriteFile(rif_file, (long*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
+			AVPWriteFile(rif_file, (int64_t*)tempbuffer, (file_length - (sfpl() + length)), &bytes_read, 0);
 #endif
 
 			delete [] tempbuffer;
@@ -346,12 +346,12 @@ BOOL Lockable_Chunk_With_Children::update_chunk_in_file(HANDLE &rif_file)
 	int file_length = GetFileSize(rif_file, 0);
 	SetFilePointer(rif_file, 8, 0, FILE_BEGIN);
 
-	WriteFile(rif_file, (long*)&file_length, 4, &bytes_read, 0);
+	WriteFile(rif_file, (int64_t*)&file_length, 4, &bytes_read, 0);
 #else
 	int file_length = AVPGetFileSize(rif_file, 0);
 	AVPSetFilePointer(rif_file, 8, 0, FILE_BEGIN);
 
-	AVPWriteFile(rif_file, (long*)&file_length, 4, &bytes_read, 0);
+	AVPWriteFile(rif_file, (int64_t*)&file_length, 4, &bytes_read, 0);
 #endif
 
 	// DO NOT PUT ANY CODE AFTER THIS
@@ -629,15 +629,15 @@ BOOL File_Chunk::write_file (const char * fname)
 		return FALSE;
 	}
 		
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 
 #ifdef _WIN32
-	ok = WriteFile(rif_file, (long*)outPackage, outPackage->CompressedDataSize + sizeof(HuffmanPackage), &junk, 0);
+	ok = WriteFile(rif_file, (int64_t*)outPackage, outPackage->CompressedDataSize + sizeof(HuffmanPackage), &junk, 0);
 
 	CloseHandle(rif_file);
 #else
-	ok = AVPWriteFile(rif_file, (long*)outPackage, outPackage->CompressedDataSize + sizeof(HuffmanPackage), &junk, 0);
+	ok = AVPWriteFile(rif_file, (int64_t*)outPackage, outPackage->CompressedDataSize + sizeof(HuffmanPackage), &junk, 0);
 
 	AVPCloseHandle(rif_file);
 #endif
@@ -744,7 +744,7 @@ BOOL File_Chunk::check_file()
 
 
 	HANDLE rif_file;
-	unsigned long bytes_read;
+	uint64_t bytes_read;
 
 	int tries = 0;
 
@@ -801,19 +801,19 @@ BOOL File_Chunk::check_file()
 
 			// go to lock status in header
 			SetFilePointer(rif_file,obhead.first_entry() + 12,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
-			ReadFile (rif_file, (long *) locker, 16, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) locker, 16, &bytes_read, 0);
 
 			// go to version number
 			SetFilePointer(rif_file,obhead.first_entry() + 88,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &v_no, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &v_no, 4, &bytes_read, 0);
 
 			char name[50];
 
 			// get object identifier
 			SetFilePointer(rif_file,obhead.first_entry() + 96,0,FILE_BEGIN);
 			int i = 0; 
-			do ReadFile (rif_file, (long *) (name + i), 1, &bytes_read, 0);
+			do ReadFile (rif_file, (int64_t *) (name + i), 1, &bytes_read, 0);
 			while (name[i++] != 0);
 
 			Object_Chunk * tmpob;
@@ -877,12 +877,12 @@ BOOL File_Chunk::check_file()
 
 			// go to lock status in header
 			SetFilePointer(rif_file,shphead.first_entry() + 12,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
-			ReadFile (rif_file, (long *) locker, 16, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) locker, 16, &bytes_read, 0);
 
 			int id;			
 			// get shape identifier
-			ReadFile (rif_file, (long *) &id, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &id, 4, &bytes_read, 0);
 
 
 			// Here we update max_id
@@ -890,7 +890,7 @@ BOOL File_Chunk::check_file()
 
 			// go to version number
 			SetFilePointer(rif_file,shphead.first_entry() + 100,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &v_no, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &v_no, 4, &bytes_read, 0);
 
 			Shape_Chunk * tmpshp;
 			Shape_Header_Chunk * tmpshph;
@@ -962,12 +962,12 @@ BOOL File_Chunk::check_file()
 
 			// go to lock status in header
 			SetFilePointer(rif_file,sprchhl.first_entry() + 12,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
-			ReadFile (rif_file, (long *) locker, 16, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) locker, 16, &bytes_read, 0);
 
 			// go to version number
 			SetFilePointer(rif_file,sprchhl.first_entry() + 32,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &v_no, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &v_no, 4, &bytes_read, 0);
 
 			if (sprhead->version_no < v_no)
 			{
@@ -1019,12 +1019,12 @@ BOOL File_Chunk::check_file()
 
 			// go to lock status in header
 			SetFilePointer(rif_file,edhl.first_entry() + 12,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
-			ReadFile (rif_file, (long *) locker, 16, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) locker, 16, &bytes_read, 0);
 
 			// go to version number
 			SetFilePointer(rif_file,edhl.first_entry() + 32,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &v_no, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &v_no, 4, &bytes_read, 0);
 
 			if (edhead->version_no < v_no)
 			{
@@ -1074,12 +1074,12 @@ BOOL File_Chunk::check_file()
 
 			// go to lock status in header
 			SetFilePointer(rif_file,enumchhl.first_entry() + 12,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &flags, 4, &bytes_read, 0);
-			ReadFile (rif_file, (long *) locker, 16, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &flags, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) locker, 16, &bytes_read, 0);
 
 			// go to version number
 			SetFilePointer(rif_file,enumchhl.first_entry() + 32,0,FILE_BEGIN);
-			ReadFile (rif_file, (long *) &v_no, 4, &bytes_read, 0);
+			ReadFile (rif_file, (int64_t *) &v_no, 4, &bytes_read, 0);
 
 			if (enumhead->version_no < v_no)
 			{
@@ -1150,7 +1150,7 @@ BOOL File_Chunk::update_file()
 	check_file();
 
 	HANDLE rif_file;
-	unsigned long bytes_read;
+	uint64_t bytes_read;
 
 	int tries = 0;
 
@@ -1220,7 +1220,7 @@ BOOL File_Chunk::update_file()
 
 		int f_version_num;
 		SetFilePointer (rif_file,verinf.first_entry() + 12,0,FILE_BEGIN);
-		ReadFile (rif_file, (long *) &f_version_num, 4, &bytes_read, 0);
+		ReadFile (rif_file, (int64_t *) &f_version_num, 4, &bytes_read, 0);
 
 		SetFilePointer (rif_file,verinf.first_entry() + 12,0,FILE_BEGIN);
 
@@ -1231,7 +1231,7 @@ BOOL File_Chunk::update_file()
 		
 		f_version_num++;
 
-		WriteFile (rif_file, (long *) &f_version_num, 4, &bytes_read, 0);
+		WriteFile (rif_file, (int64_t *) &f_version_num, 4, &bytes_read, 0);
 
 	}
 
@@ -1314,7 +1314,7 @@ BOOL File_Chunk::update_file()
 	int file_length = GetFileSize(rif_file,0);
 	SetFilePointer (rif_file,8,0,FILE_BEGIN);
 
-	WriteFile (rif_file, (long *) &file_length, 4, &bytes_read, 0);
+	WriteFile (rif_file, (int64_t *) &file_length, 4, &bytes_read, 0);
 
 	CloseHandle (rif_file);
 
@@ -1333,7 +1333,7 @@ BOOL File_Chunk::update_chunks_from_file()
 	check_file();
 	
 	HANDLE rif_file;
-	unsigned long bytes_read;
+	uint64_t bytes_read;
 	
 #ifdef _WIN32
 	rif_file = CreateFileA(filename, GENERIC_WRITE + GENERIC_READ, 0, 0, OPEN_EXISTING,
@@ -1361,12 +1361,12 @@ BOOL File_Chunk::update_chunks_from_file()
 		int f_version_num;
 #ifdef _WIN32
 		SetFilePointer(rif_file, verinf.first_entry() + 12, 0, FILE_BEGIN);
-		ReadFile(rif_file, (long*)&f_version_num, 4, &bytes_read, 0);
+		ReadFile(rif_file, (int64_t*)&f_version_num, 4, &bytes_read, 0);
 
 		SetFilePointer(rif_file, verinf.first_entry() + 12, 0, FILE_BEGIN);
 #else
 		AVPSetFilePointer(rif_file, verinf.first_entry() + 12, 0, FILE_BEGIN);
-		AVPReadFile(rif_file, (long*)&f_version_num, 4, &bytes_read, 0);
+		AVPReadFile(rif_file, (int64_t*)&f_version_num, 4, &bytes_read, 0);
 
 		AVPSetFilePointer(rif_file, verinf.first_entry() + 12, 0, FILE_BEGIN);
 #endif
@@ -1432,9 +1432,9 @@ BOOL File_Chunk::update_chunks_from_file()
 #endif
 						int i = 0; 
 #ifdef _WIN32
-						do ReadFile(rif_file, (long*)(name + i), 1, &bytes_read, 0);
+						do ReadFile(rif_file, (int64_t*)(name + i), 1, &bytes_read, 0);
 #else
-						do AVPReadFile(rif_file, (long*)(name + i), 1, &bytes_read, 0);
+						do AVPReadFile(rif_file, (int64_t*)(name + i), 1, &bytes_read, 0);
 #endif
 						while (name[i++] != 0);
 
@@ -1449,15 +1449,15 @@ BOOL File_Chunk::update_chunks_from_file()
 #ifdef _WIN32
 					SetFilePointer(rif_file, ofpl() + 8, 0, FILE_BEGIN);
 					int length;
-					ReadFile(rif_file, (long*)&length, 4, &bytes_read, 0);
+					ReadFile(rif_file, (int64_t*)&length, 4, &bytes_read, 0);
 					buffer = new char[length];
-					ReadFile(rif_file, (long*)buffer, length - 12, &bytes_read, 0);
+					ReadFile(rif_file, (int64_t*)buffer, length - 12, &bytes_read, 0);
 #else
 					AVPSetFilePointer(rif_file, ofpl() + 8, 0, FILE_BEGIN);
 					int length;
-					AVPReadFile(rif_file, (long*)&length, 4, &bytes_read, 0);
+					AVPReadFile(rif_file, (int64_t*)&length, 4, &bytes_read, 0);
 					buffer = new char[length];
-					AVPReadFile(rif_file, (long*)buffer, length - 12, &bytes_read, 0);
+					AVPReadFile(rif_file, (int64_t*)buffer, length - 12, &bytes_read, 0);
 #endif
 					new Object_Chunk (this, buffer, length-12);
 					delete [] buffer;
@@ -1517,11 +1517,11 @@ BOOL File_Chunk::update_chunks_from_file()
 #ifdef _WIN32
 						SetFilePointer(rif_file, shphead.first_entry() + 32, 0, FILE_BEGIN);
 						int sh_number;
-						ReadFile(rif_file, (long*)&sh_number, 4, &bytes_read, 0);
+						ReadFile(rif_file, (int64_t*)&sh_number, 4, &bytes_read, 0);
 #else
 						AVPSetFilePointer(rif_file, shphead.first_entry() + 32, 0, FILE_BEGIN);
 						int sh_number;
-						AVPReadFile(rif_file, (long*)&sh_number, 4, &bytes_read, 0);
+						AVPReadFile(rif_file, (int64_t*)&sh_number, 4, &bytes_read, 0);
 #endif
 
 						if (sh_number == shhead->file_id_num) break;
@@ -1535,15 +1535,15 @@ BOOL File_Chunk::update_chunks_from_file()
 #ifdef _WIN32
 					SetFilePointer(rif_file, sfpl() + 8, 0, FILE_BEGIN);
 					int length;
-					ReadFile(rif_file, (long*)&length, 4, &bytes_read, 0);
+					ReadFile(rif_file, (int64_t*)&length, 4, &bytes_read, 0);
 					buffer = new char[length];
-					ReadFile(rif_file, (long*)buffer, length - 12, &bytes_read, 0);
+					ReadFile(rif_file, (int64_t*)buffer, length - 12, &bytes_read, 0);
 #else
 					AVPSetFilePointer(rif_file, sfpl() + 8, 0, FILE_BEGIN);
 					int length;
-					AVPReadFile(rif_file, (long*)&length, 4, &bytes_read, 0);
+					AVPReadFile(rif_file, (int64_t*)&length, 4, &bytes_read, 0);
 					buffer = new char[length];
-					AVPReadFile(rif_file, (long*)buffer, length - 12, &bytes_read, 0);
+					AVPReadFile(rif_file, (int64_t*)buffer, length - 12, &bytes_read, 0);
 #endif
 					new Shape_Chunk (this, buffer, length-12);
 					delete [] buffer;

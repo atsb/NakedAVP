@@ -17,7 +17,7 @@ Chunk * Parent_File;
 
 void list_chunks_in_file(List<int> * pList, HANDLE hand, char const * chunk_id)
 {
-	unsigned long bytes_read;
+	uint64_t bytes_read;
 
 	char buffer[8];
 	BOOL ok = TRUE;
@@ -37,7 +37,7 @@ void list_chunks_in_file(List<int> * pList, HANDLE hand, char const * chunk_id)
 	int chunk_length;
 	int sub_chunk_ln;
 
-	ReadFile(hand, (long*)&chunk_length, 4, &bytes_read, 0);
+	ReadFile(hand, (int64_t*)&chunk_length, 4, &bytes_read, 0);
 #else
 	int init_file_pos = AVPSetFilePointer(hand, 0, 0, FILE_CURRENT);
 	int file_pos;
@@ -48,7 +48,7 @@ void list_chunks_in_file(List<int> * pList, HANDLE hand, char const * chunk_id)
 	int chunk_length;
 	int sub_chunk_ln;
 
-	AVPReadFile(hand, (long*)&chunk_length, 4, &bytes_read, 0);
+	AVPReadFile(hand, (int64_t*)&chunk_length, 4, &bytes_read, 0);
 #endif
 
 	if ((init_file_pos + chunk_length) > file_length) return;
@@ -57,23 +57,23 @@ void list_chunks_in_file(List<int> * pList, HANDLE hand, char const * chunk_id)
 	while ((file_pos = SetFilePointer(hand, 0, 0, FILE_CURRENT))
 		< (init_file_pos + chunk_length) && ok) {
 
-		ok = ReadFile(hand, (long*)buffer, 8, &bytes_read, 0);
+		ok = ReadFile(hand, (int64_t*)buffer, 8, &bytes_read, 0);
 #else
 	while ((file_pos = AVPSetFilePointer(hand, 0, 0, FILE_CURRENT))
 		< (init_file_pos + chunk_length) && ok) {
 
-		ok = AVPReadFile(hand, (long*)buffer, 8, &bytes_read, 0);
+		ok = AVPReadFile(hand, (int64_t*)buffer, 8, &bytes_read, 0);
 #endif
 
 		if (strncmp(buffer, chunk_id, 8) == 0)
 			pList->add_entry(file_pos);
 
 #ifdef _WIN32
-		ok = ReadFile(hand, (long*)&sub_chunk_ln, 4, &bytes_read, 0);
+		ok = ReadFile(hand, (int64_t*)&sub_chunk_ln, 4, &bytes_read, 0);
 
 		SetFilePointer(hand, sub_chunk_ln - 12, 0, FILE_CURRENT);
 #else
-		ok = AVPReadFile(hand, (long*)&sub_chunk_ln, 4, &bytes_read, 0);
+		ok = AVPReadFile(hand, (int64_t*)&sub_chunk_ln, 4, &bytes_read, 0);
 
 		AVPSetFilePointer(hand, sub_chunk_ln - 12, 0, FILE_CURRENT);
 #endif
@@ -139,7 +139,7 @@ Chunk::Chunk(Chunk_With_Children * _parent, const char * _identifier)
 
 BOOL Chunk::output_chunk (HANDLE & hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	BOOL ok;
 	char * data_block;
 
@@ -148,9 +148,9 @@ BOOL Chunk::output_chunk (HANDLE & hand)
 	if (data_block)
 	{
 #ifdef _WIN32
-		ok = WriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+		ok = WriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #else
-		ok = AVPWriteFile(hand, (long*)data_block, (unsigned long)chunk_size, &junk, 0);
+		ok = AVPWriteFile(hand, (int64_t*)data_block, (uint64_t)chunk_size, &junk, 0);
 #endif
 		delete [] data_block;
 
@@ -305,22 +305,22 @@ size_t Chunk_With_Children::size_chunk ()
 
 BOOL Chunk_With_Children::output_chunk (HANDLE &hand)
 {
-	unsigned long junk;
+	uint64_t junk;
 	Chunk * child_ptr = children;
 	BOOL ok;
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)identifier, 8, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)identifier, 8, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)identifier, 8, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)identifier, 8, &junk, 0);
 #endif
 
 	if (!ok) return FALSE;
 
 #ifdef _WIN32
-	ok = WriteFile(hand, (long*)&chunk_size, 4, &junk, 0);
+	ok = WriteFile(hand, (int64_t*)&chunk_size, 4, &junk, 0);
 #else
-	ok = AVPWriteFile(hand, (long*)&chunk_size, 4, &junk, 0);
+	ok = AVPWriteFile(hand, (int64_t*)&chunk_size, 4, &junk, 0);
 #endif
 
 	if (!ok) return FALSE;

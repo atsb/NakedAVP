@@ -95,7 +95,7 @@ extern IMAGEHEADER ImageHeaderArray[]; /* Array of Image Headers */
 */
 
 /* Timer */
-   long lastTickCount;
+    int64_t lastTickCount;
 
 	unsigned char *ScreenBuffer    = 0;		/* Ensure initialised to Null */
 
@@ -676,7 +676,7 @@ void WaitForReturn(void)
 
 {
 	/* Crude but probably serviceable for now */
-	long SavedTickCount;
+    int64_t SavedTickCount;
 	SavedTickCount  = lastTickCount;
 
 /* Display any lingering text */

@@ -115,7 +115,7 @@ union PtrPackTag
 {
 	unsigned char  *cP;
 	unsigned short *wP;
-	unsigned long  *lP;
+	uint64_t  *lP;
 };
 
 /* G L O B A L ******************************************************** */
@@ -860,9 +860,9 @@ static fontPtr CleanupFontLoadFail(HANDLE fH, fontPtr fontP)
 static void out_text(LPDIRECTDRAWSURFACE surfP, int xc, int yc, 
 	const char *text, short x_limit, fontPtr fP)
 {
-	register unsigned long *srcP, *destP;
+	register uint64_t *srcP, *destP;
 	register unsigned int x, y; 
-	unsigned long heightTimesPitch, charOffset;
+	uint64_t heightTimesPitch, charOffset;
 	unsigned int prop_width;
 	int srcIncr, longsPerLine;
 	unsigned int bitShift;
@@ -897,7 +897,7 @@ static void out_text(LPDIRECTDRAWSURFACE surfP, int xc, int yc,
 	/* Point to DRAM buffer co-ordinate where the top left of the
 	 * first character should be written.
 	 */
-	destP = (unsigned long *) surfaceDesc.lpSurface + 
+	destP = (uint64_t *) surfaceDesc.lpSurface + 
 		((yc * surfaceDesc.lPitch) >> 2) + (xc >> bitShift);
 	heightTimesPitch = (fP->height * surfaceDesc.lPitch) >> 2;
 	longsPerLine = (fP->byte_width * dd_mode.bitsPerPixel) >> 2;
@@ -910,7 +910,7 @@ static void out_text(LPDIRECTDRAWSURFACE surfP, int xc, int yc,
 		/* Point srcP to first byte of the bitmap for the current
 		 * character.
 		 */
-		srcP = ((unsigned long *) fP->bitmapP) + (*text) * charOffset;
+		srcP = ((uint64_t *) fP->bitmapP) + (*text) * charOffset;
 
 		/* Get width of this character (in pixels). */
 		if(fP->width == PROP_WIDTH)
