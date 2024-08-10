@@ -54,6 +54,11 @@ For GNU/Linux systems and other *NIX/BSD systems, the standard default directory
 
 This is for ease of installation and general usage/cleanliness.
 
+For macOS:
+Place the game data from GOG/Steam/CD into here: /Users/$USER/Library/Application Support/AliensVsPredator/
+
+Then use the binary to execute.  The game will load.
+
 Part 4: Credits
 ---------------
 
