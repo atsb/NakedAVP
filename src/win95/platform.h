@@ -19,8 +19,8 @@ extern "C"  {
 
 typedef struct LONGLONGCH {
 
-	unsigned int lo32;
-	int hi32;
+	uint32_t lo32;
+	int32_t hi32;
 
 } LONGLONGCH;
 
@@ -553,10 +553,6 @@ long GetWindowsTickCount(void);
 void CheckForWindowsMessages(void);
 BOOL ExitWindowsSystem(void);
 BOOL InitialiseWindowsSystem(HANDLE hInstance, int nCmdShow, int WinInitMode);
-//void KeyboardHandlerKeyDown(WPARAM wParam);
-//void KeyboardHandlerKeyUp(WPARAM wParam);
-//void MouseVelocityHandler(UINT message, LPARAM lParam);
-//void MousePositionHandler(UINT message, LPARAM lParam);
 int  ReadJoystick(void); 
 int  CheckForJoystick(void);
 BOOL SpawnRasterThread();
@@ -644,11 +640,7 @@ void ReleaseDirectMouse(void);
 /*
 	Internal
 */
-//#ifdef AVP_DEBUG_VERSION
 int textprint(const char* t, ...);
-//#else
-//#define textprint(ignore)
-//#endif
 
 
 void ConvertToDDPalette(unsigned char* src, unsigned char* dst, int length, int flags);
@@ -660,17 +652,11 @@ void FlushTextprintBuffer(void);
 void InitPrintQueue(void);
 void InitJoysticks(void);
 void ReadJoysticks(void);
-//int ChangeDisplayModes(HINSTANCE hInst, int nCmd, 
-//     int NewVideoMode, int NewWindowMode,
-//     int NewZBufferMode, int NewRasterisationMode, 
-//     int NewSoftwareScanDrawMode, int NewDXMemoryMode);
 int DeallocateAllImages(void);
 int MinimizeAllImages(void);
 int RestoreAllImages(void);
 void ConvertDDToInternalPalette(unsigned char* src, unsigned char* dst, int length);
 PROCESSORTYPES ReadProcessorType(void);
-
-//extern DDCAPS direct_draw_caps;
 
 /*
 

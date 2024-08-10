@@ -266,20 +266,20 @@ typedef struct
 	
 	enum AVPMENU_ID		CurrentMenu;
 	AVPMENU_ELEMENT		*MenuElements;
-	int					NumberOfElementsInMenu;
-	int					CurrentlySelectedElement;
-	int					MenuHeight;
+	int32_t					NumberOfElementsInMenu;
+    int32_t					CurrentlySelectedElement;
+    int32_t					MenuHeight;
 
 	enum AVPMENU_FONT_ID FontToUse;
 
-	int					PositionInTextField;
+    int32_t					PositionInTextField;
 
-	int 				WidthLeftForText; //thing for checking whether user input will fit on screen
+    int32_t 				WidthLeftForText; //thing for checking whether user input will fit on screen
 
-	unsigned int		UserEnteringText :1;
-	unsigned int		UserEnteringNumber :1;
-	unsigned int		UserChangingKeyConfig :1;
-	unsigned int		ChangingPrimaryConfig :1;
+	uint32_t		UserEnteringText :1;
+    uint32_t		UserEnteringNumber :1;
+    uint32_t		UserChangingKeyConfig :1;
+    uint32_t		ChangingPrimaryConfig :1;
 } AVP_MENUS;
 
 

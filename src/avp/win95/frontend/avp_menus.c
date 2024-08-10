@@ -1995,7 +1995,7 @@ static void ActUponUsersInput(void)
 			{
 				if(AvPMenus.PositionInTextField==0)
 				{
-					strcpy(elementPtr->c.TextPtr,"DeadMeat");
+					strcpy(elementPtr->c.TextPtr,"Player");
 				}
 				AvPMenus.CurrentlySelectedElement++;
 			}

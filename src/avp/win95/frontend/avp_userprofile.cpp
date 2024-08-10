@@ -248,7 +248,7 @@ static void SetDefaultProfileOptions(AVP_USER_PROFILE *profilePtr)
 	IntroOutroMoviesAreActive = 1; 
 	AutoWeaponChangeOn = TRUE;
 	
-	strcpy(MP_PlayerName, "DeadMeat");
+	strcpy(MP_PlayerName, "Player");
 
 	SetToDefaultDetailLevels();
 	
