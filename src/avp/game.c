@@ -1,4 +1,5 @@
 #include "3dc.h"
+#include <stdbool.h>
 #include <math.h>
 #include "inline.h"
 #include "module.h"
@@ -89,6 +90,8 @@ AVP_GAME_DESC AvP;		 /* game description */
 char projectsubdirectory[] = {"avp/"};
 int SavedFrameRate;
 int SavedNormalFrameTime;
+
+bool bTurnSpeedAdjust = true; // when true, players turn speed will half when crouched or walking
 
 
 /* Andy 13/10/97

@@ -1,6 +1,8 @@
 /*-------------- Patrick 15/10/96 ------------------
 	Source file for Player Movement ...
 ----------------------------------------------------*/
+#include <stdbool.h>
+
 #include "3dc.h"
 #include "inline.h"
 #include "module.h"
@@ -132,6 +134,7 @@ extern int weaponHandle;
 
 extern int PlayerDamagedOverlayIntensity;
 
+extern bool bTurnSpeedAdjust;
 
 #define JETPACK_MAX_SPEED 10000
 #define JETPACK_THRUST 40000
@@ -425,8 +428,16 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 		{
 			strafeSpeed	= MUL_FIXED(strafeSpeed,playerStatusPtr->Mvt_SideStepIncrement);
 		}
-		forwardSpeed = MUL_FIXED(forwardSpeed,playerStatusPtr->Mvt_MotionIncrement);
-		turnSpeed    = MUL_FIXED(turnSpeed,playerStatusPtr->Mvt_TurnIncrement);
+
+		int preTurnSpeed = turnSpeed;
+
+		forwardSpeed = MUL_FIXED(forwardSpeed, playerStatusPtr->Mvt_MotionIncrement);
+
+		int turnSpeedTest = MUL_FIXED(turnSpeed, playerStatusPtr->Mvt_TurnIncrement);
+		if (turnSpeedTest > 0) {
+			turnSpeedTest++;
+		}
+		turnSpeed = turnSpeedTest;
 		
 		if (MIRROR_CHEATMODE)
 		{
@@ -440,11 +451,17 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 			{
 				turnSpeed >>= CameraZoomLevel;
 				playerStatusPtr->Mvt_PitchIncrement >>= CameraZoomLevel;
+
+				char buf[100];
+				sprintf(buf, "PitchIncrement: %d\n", playerStatusPtr->Mvt_PitchIncrement);
+				OutputDebugString(buf);
 			}
 		}
 		
-		if( ((AvP.PlayerType == I_Alien) || (playerStatusPtr->ShapeState == PMph_Standing))
-			&& (playerStatusPtr->Mvt_InputRequests.Flags.Rqst_Faster) && (playerStatusPtr->Encumberance.CanRun) )
+		if ((((AvP.PlayerType == I_Alien) || (playerStatusPtr->ShapeState == PMph_Standing))
+			&& (playerStatusPtr->Mvt_InputRequests.Flags.Rqst_Faster) && (playerStatusPtr->Encumberance.CanRun)
+			&& (playerStatusPtr->Mvt_InputRequests.Flags.Rqst_Faster) && (playerStatusPtr->Encumberance.CanRun)
+			|| !bTurnSpeedAdjust))
 		{	
 			/* Test - half backward speed for predators */
 			if (AvP.PlayerType==I_Predator) {
@@ -463,10 +480,18 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 		
 		/* Marker */
 
-		strafeSpeed=MUL_FIXED(strafeSpeed,playerStatusPtr->Encumberance.MovementMultiple);
-		forwardSpeed=MUL_FIXED(forwardSpeed,playerStatusPtr->Encumberance.MovementMultiple);
-		turnSpeed=MUL_FIXED(turnSpeed,playerStatusPtr->Encumberance.TurningMultiple);
-		jumpSpeed=MUL_FIXED(jumpSpeed,playerStatusPtr->Encumberance.JumpingMultiple);
+		strafeSpeed = MUL_FIXED(strafeSpeed, playerStatusPtr->Encumberance.MovementMultiple);
+		forwardSpeed = MUL_FIXED(forwardSpeed, playerStatusPtr->Encumberance.MovementMultiple);
+
+		preTurnSpeed = turnSpeed;
+
+		turnSpeed = MUL_FIXED(turnSpeed,playerStatusPtr->Encumberance.TurningMultiple);
+
+		if (preTurnSpeed > 0) {
+			turnSpeed++;
+		}
+
+		jumpSpeed = MUL_FIXED(jumpSpeed,playerStatusPtr->Encumberance.JumpingMultiple);
 		
 		/* KJL 17:45:03 9/9/97 - inertia means it's difficult to stop */			
 	  	if (forwardSpeed*playerStatusPtr->ForwardInertia<0) playerStatusPtr->ForwardInertia = 0;
@@ -961,7 +986,8 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 										NormalFrameTime>>PANRATESHIFT
 									);
 
-			if (playerStatusPtr->ViewPanX > AllowedLookDownAngle) playerStatusPtr->ViewPanX=AllowedLookDownAngle; 
+			PlayerStatusPtr->ViewPanX++; // deadzone fix
+			if (playerStatusPtr->ViewPanX > AllowedLookDownAngle) playerStatusPtr->ViewPanX = AllowedLookDownAngle;
 
         	playerStatusPtr->ViewPanX -= 1024;
 			playerStatusPtr->ViewPanX &= wrap360;
