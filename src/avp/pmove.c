@@ -451,10 +451,6 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 			{
 				turnSpeed >>= CameraZoomLevel;
 				playerStatusPtr->Mvt_PitchIncrement >>= CameraZoomLevel;
-
-				char buf[100];
-				sprintf(buf, "PitchIncrement: %d\n", playerStatusPtr->Mvt_PitchIncrement);
-				OutputDebugString(buf);
 			}
 		}
 		

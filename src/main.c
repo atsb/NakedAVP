@@ -538,78 +538,6 @@ int InitSDL()
 	return 0;
 }
 
-#if !defined(NDEBUG)
-static void DumpVideoModeInfo(SDL_Window* w) {
-	int numVideoDisplays;
-	int displayIndex;
-	int numDisplayModes;
-	int modeIndex;
-	const char* displayName;
-	numVideoDisplays = SDL_GetNumVideoDisplays();
-	if (numVideoDisplays > 0) {
-		for (displayIndex = 0; displayIndex < numVideoDisplays; displayIndex++) {
-			displayName = SDL_GetDisplayName(displayIndex);
-			printf("%d: %s\n", displayIndex, displayName);
-			
-			SDL_Rect bounds;
-			SDL_DisplayMode mode;
-			
-			if (SDL_GetDisplayBounds(displayIndex, &bounds) == 0) {
-				printf("\tbounds: %4d,%4d,%4d,%4d\n",
-					   bounds.x,
-					   bounds.y,
-					   bounds.w,
-					   bounds.h);
-			}
-			
-			if (SDL_GetDesktopDisplayMode(displayIndex, &mode) == 0) {
-				printf("\tdesktop: %08x,%4d,%4d,%d\n",
-					   mode.format,
-					   mode.w,
-					   mode.h,
-					   mode.refresh_rate);
-			}
-			
-			if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
-				printf("\tcurrent: %08x,%4d,%4d,%d\n",
-					   mode.format,
-					   mode.w,
-					   mode.h,
-					   mode.refresh_rate);
-			}
-			
-			numDisplayModes = SDL_GetNumDisplayModes(displayIndex);
-			for (modeIndex = 0; modeIndex < numDisplayModes; modeIndex++) {
-				if (SDL_GetDisplayMode(displayIndex, modeIndex, &mode) == 0) {
-					printf("\t%2d: %08x,%4d,%4d,%d\n",
-						   modeIndex,
-						   mode.format,
-						   mode.w,
-						   mode.h,
-						   mode.refresh_rate);
-				}
-			}
-		}
-	}
-	
-	if (w != NULL) {
-		int displayIndex;
-		SDL_DisplayMode mode;
-
-		displayIndex = SDL_GetWindowDisplayIndex(w);
-		
-		printf("Window display index: %d\n", displayIndex);
-		if (SDL_GetWindowDisplayMode(w, &mode) == 0) {
-			printf("Window display mode: %08x,%4d,%4d,%d\n",
-				   mode.format,
-				   mode.w,
-				   mode.h,
-				   mode.refresh_rate);
-		}
-	}
-}
-#endif
-
 static void SetWindowSize(int PhysicalWidth, int PhysicalHeight, int VirtualWidth, int VirtualHeight)
 {
 #if !defined(NDEBUG)
@@ -632,13 +560,7 @@ static void SetWindowSize(int PhysicalWidth, int PhysicalHeight, int VirtualWidt
 
 	if (window != NULL) {
 		SDL_SetWindowSize(window, PhysicalWidth, PhysicalHeight);
-
-		//pglViewport(0, 0, ViewportWidth, ViewportHeight);
 	}
-	
-#if !defined(NDEBUG)
-	DumpVideoModeInfo(window);
-#endif
 }
 
 static int SetSoftVideoMode(int Width, int Height, int Depth)
@@ -734,7 +656,7 @@ static int SetOGLVideoMode(int Width, int Height)
 	if (window == NULL) {
 		load_ogl_functions(0);
 
-		flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+		flags = SDL_WINDOW_OPENGL;
 
 #if defined(FIXED_WINDOW_SIZE)
 		flags |= SDL_WINDOW_BORDERLESS;

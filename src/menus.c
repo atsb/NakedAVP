@@ -393,7 +393,7 @@ int LengthOfSmallMenuText(char *textPtr)
 	return width;
 }
 
-int RenderMenuText(const char *textPtr, int sx, int sy, int alpha, enum AVPMENUFORMAT_ID format)
+int RenderMenuText(char *textPtr, int sx, int sy, int alpha, enum AVPMENUFORMAT_ID format)
 {
 	int width;
 	

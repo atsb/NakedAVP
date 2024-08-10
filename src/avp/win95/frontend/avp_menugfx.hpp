@@ -97,7 +97,7 @@ extern void LoadAllAvPMenuGfx(void);
 extern void LoadAllSplashScreenGfx(void);
 extern void ReleaseAllAvPMenuGfx(void);
 
-extern int RenderMenuText(const char *textPtr, int x, int y, int alpha, enum AVPMENUFORMAT_ID format);
+extern int RenderMenuText(char *textPtr, int x, int y, int alpha, enum AVPMENUFORMAT_ID format);
 
 extern int RenderSmallMenuText(char *textPtr, int x, int y, int alpha, enum AVPMENUFORMAT_ID format);
 extern int RenderSmallMenuText_Coloured(char *textPtr, int x, int y, int alpha, enum AVPMENUFORMAT_ID format, int red, int green, int blue); 
