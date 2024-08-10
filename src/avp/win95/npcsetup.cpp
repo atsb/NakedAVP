@@ -39,16 +39,16 @@ extern "C"
 };
 #endif
 
-static char Marine_File[]= "hnpcmarine.rif";
+static char Marine_File[]= "hnpcmarine.RIF";
 static char Alien_File[]= "hnpcalien.rif";
 static char Predator_File[]= "hnpcpredator.rif";
 static char Hugger_File[]= "hnpchugger.rif";
 static char AlienQueen_File[]= "queen.rif";
-static char Civilian_File[]= "hnpc_civvie.rif";
-static char PredAlien_File[]= "hnpcpred_alien.rif";
+static char Civilian_File[]= "hnpc_civvie.RIF";
+static char PredAlien_File[]= "hnpcpred_alien.RIF";
 static char Xenoborg_File[]= "hnpc_xenoborg.rif";
 static char Pretorian_File[]= "hnpcpretorian.rif";
-static char SentryGun_File[]= "sentry.rif";
+static char SentryGun_File[]= "sentry.RIF";
 
 static char* HNPC_FileNames[]=
 {

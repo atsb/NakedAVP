@@ -267,16 +267,16 @@ void LoadMarineScreamSounds()
 }
 void LoadAlienScreamSounds()
 {
-	AlienSounds.LoadSounds("aliensound.dat","npc\\alienvoice\\");
+	AlienSounds.LoadSounds("AlienSound.dat","npc\\alienvoice\\");
 }
 void LoadPredatorScreamSounds()
 {
-	PredatorSounds.LoadSounds("predsound.dat","npc\\predatorvoice\\");
+	PredatorSounds.LoadSounds("PredSound.dat","npc\\predatorvoice\\");
 }
 
 void LoadQueenScreamSounds()
 {
-	QueenSounds.LoadSounds("queensound.dat","npc\\queenvoice\\");
+	QueenSounds.LoadSounds("QueenSound.dat","npc\\queenvoice\\");
 }
 
 
