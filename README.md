@@ -29,7 +29,7 @@ Previously missing features are still missing.  Multiplayer, movies, etc.
 Part 2: Compilation
 -------------------
 
-CMake, SDL 2, OpenAL and OpenGL support are required.
+CMake, SDL 3, OpenAL and OpenGL support are required.
 
 An example of how to use CMake to build the game:
 $ cd <avp-source-code>

@@ -412,7 +412,7 @@ void NextVideoMode2()
 
 char *GetVideoModeDescription2()
 {
-	return "SDL2";
+	return "SDL3";
 }
 
 char *GetVideoModeDescription3()
