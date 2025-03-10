@@ -57,7 +57,7 @@
 void RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_CHAR(char Ch);
 void RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_KEYDOWN(int wParam);
 
-static int SDLCALL SDLEventFilter(void* userData, SDL_Event* event);
+static bool SDLCALL SDLEventFilter(void* userData, SDL_Event* event);
 
 char LevelName[] = {"predbit6\0QuiteALongNameActually"}; /* the real way to load levels */
 
@@ -617,7 +617,7 @@ static void load_opengl_library(const char *lib)
 }
 
 /* ** */
-static int SDLCALL SDLEventFilter(void* userData, SDL_Event* event) {
+static bool SDLCALL SDLEventFilter(void* userData, SDL_Event* event) {
 	(void) userData;
 
 	//printf("SDLEventFilter: %d\n", event->type);
@@ -628,7 +628,7 @@ static int SDLCALL SDLEventFilter(void* userData, SDL_Event* event) {
 			break;
 	}
 	
-	return 1;
+	return true;
 }
 
 static int InitSDLVideo(void) {
@@ -1100,7 +1100,7 @@ void CheckForWindowsMessages()
 	DebouncedGotAnyKey = 0;
 	memset(DebouncedKeyboardInput, 0, sizeof(DebouncedKeyboardInput));
 	
-	wantmouse =	(SDL_GetRelativeMouseMode() == SDL_TRUE);
+	wantmouse =	(SDL_GetWindowRelativeMouseMode(window) == true);
 
 	// "keyboard" events that don't have an up event
 	KeyboardInput[KEY_MOUSEWHEELUP] = 0;
@@ -1172,15 +1172,15 @@ void CheckForWindowsMessages()
 	buttons = SDL_GetRelativeMouseState(&x, &y);
 	
 	if (wantmouse) {
-		if (buttons & SDL_BUTTON(1))
+		if (buttons & SDL_BUTTON_MASK(1))
 			handle_keypress(KEY_LMOUSE, 0, 1);
 		else
 			handle_keypress(KEY_LMOUSE, 0, 0);
-		if (buttons & SDL_BUTTON(2))
+		if (buttons & SDL_BUTTON_MASK(2))
 			handle_keypress(KEY_MMOUSE, 0, 1);
 		else
 			handle_keypress(KEY_MMOUSE, 0, 0);
-		if (buttons & SDL_BUTTON(3))
+		if (buttons & SDL_BUTTON_MASK(3))
 			handle_keypress(KEY_RMOUSE, 0, 1);
 		else
 			handle_keypress(KEY_RMOUSE, 0, 0);
@@ -1231,10 +1231,10 @@ void CheckForWindowsMessages()
 			displayMode = SDL_GetWindowFlags(window);
 			//printf("New window mode:%08x\n", displayMode);
 			if ((displayMode & (SDL_WINDOW_FULLSCREEN|SDL_WINDOW_FULLSCREEN)) != 0) {
-				SDL_SetRelativeMouseMode(SDL_TRUE);
+				SDL_SetWindowRelativeMouseMode(window, true);
 				WantFullscreen = 1;
 			} else {
-				SDL_SetRelativeMouseMode(WantMouseGrab ? SDL_TRUE : SDL_FALSE);
+				SDL_SetWindowRelativeMouseMode(window, WantMouseGrab ? true : false);
 				WantFullscreen = 0;
 			}
 		}
@@ -1246,17 +1246,17 @@ void CheckForWindowsMessages()
 		if (IsWindowed) {
 			WantMouseGrab = WantMouseGrab != 0 ? 0 : 1;
 			if (WantMouseGrab != 0) {
-				SDL_SetRelativeMouseMode(SDL_TRUE);
+				SDL_SetWindowRelativeMouseMode(window, true);
 			} else {
-				SDL_SetRelativeMouseMode(SDL_FALSE);
+				SDL_SetWindowRelativeMouseMode(window, false);
 			}
-			WantMouseGrab = (SDL_GetRelativeMouseMode() == SDL_TRUE);
+			WantMouseGrab = (SDL_GetWindowRelativeMouseMode(window) == true);
 		}
 	}
 
 	// a second reset of relative mouse state because
 	// enabling relative mouse mode moves the mouse
-	SDL_SetRelativeMouseMode(SDL_TRUE);
+	SDL_SetWindowRelativeMouseMode(window, true);
         SDL_GetRelativeMouseState(NULL, NULL);
 
 	if (GotPrintScn) {

@@ -78,9 +78,53 @@ ELSE (WIN32)
 
   IF (APPLE)
 
-    #create_search_paths(/Developer/Platforms)
-    #findpkg_framework(OpenGLES2)
-    #set(OPENGLES2_gl_LIBRARY "-framework OpenGLES")
+    FIND_PATH(OPENGLES2_INCLUDE_DIR GLES2/gl2.h
+      ${ENV_AMD_SDK_ROOT}/include
+      ${ENV_MALI_SDK_ROOT}/include
+      /opt/Imagination/PowerVR/GraphicsSDK/SDK_3.1/Builds/Include
+      /opt/homebrew/include
+      /opt/vc/include
+      /usr/openwin/share/include
+      /opt/graphics/OpenGL/include /usr/X11R6/include
+      /usr/include
+    )
+
+    FIND_LIBRARY(OPENGLES2_gl_LIBRARY
+      NAMES GLESv2
+      PATHS ${ENV_AMD_SDK_ROOT}/x86
+            ${ENV_MALI_SDK_ROOT}/bin
+            /opt/Imagination/PowerVR/GraphicsSDK/SDK_3.1/Builds/Linux/x86_32/Lib
+            /opt/homebrew/lib
+            /opt/vc/lib
+            /opt/graphics/OpenGL/lib
+            /usr/openwin/lib
+            /usr/shlib /usr/X11R6/lib
+            /usr/lib
+    )
+
+    FIND_PATH(EGL_INCLUDE_DIR EGL/egl.h
+      ${ENV_AMD_SDK_ROOT}/include
+      ${ENV_MALI_SDK_ROOT}/include
+      /opt/Imagination/PowerVR/GraphicsSDK/SDK_3.1/Builds/Include
+      /opt/homebrew/include
+      /opt/vc/include
+      /usr/openwin/share/include
+      /opt/graphics/OpenGL/include /usr/X11R6/include
+      /usr/include
+    )
+
+    FIND_LIBRARY(EGL_egl_LIBRARY
+      NAMES EGL
+      PATHS ${ENV_AMD_SDK_ROOT}/x86
+            ${ENV_MALI_SDK_ROOT}/bin
+            /opt/Imagination/PowerVR/GraphicsSDK/SDK_3.1/Builds/Linux/x86_32/Lib
+            /opt/homebrew/lib
+            /opt/vc/lib
+            /opt/graphics/OpenGL/lib
+            /usr/openwin/lib
+            /usr/shlib /usr/X11R6/lib
+            /usr/lib
+    )
 
   ELSE(APPLE)
     #getenv_path(AMD_SDK_ROOT)

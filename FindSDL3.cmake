@@ -72,17 +72,17 @@ SET(SDL3_SEARCH_PATHS
   /usr
   /sw # Fink
   /opt/local # DarwinPorts
+  /opt/homebrew # macOS Homebrew
   /opt/csw # Blastwave
   /opt
 )
 
 FIND_PATH(SDL3_INCLUDE
   NAMES
-    SDL_gesture.h # A SDL3-only header
+    SDL3
   HINTS
     $ENV{SDL3DIR}
   PATH_SUFFIXES
-    include/SDL3
     include
   PATHS
     ${SDL3_SEARCH_PATHS}
