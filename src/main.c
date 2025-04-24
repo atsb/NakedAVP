@@ -580,43 +580,6 @@ static int SetSoftVideoMode(int Width, int Height, int Depth)
 }
 
 /* ** */
-static void load_opengl_library(const char *lib)
-{
-	char tmppath[PATH_MAX];
-	size_t len, copylen;
-	
-	if (lib == NULL) {
-		if (SDL_GL_LoadLibrary(NULL) == 0) {
-			/* success */
-			return;
-		}
-		
-		fprintf( stderr, "ERROR: no opengl libraries given\n" );
-		exit( EXIT_FAILURE );
-	}
-	
-	while (lib != NULL && *lib) {
-		len = strcspn(lib, ":");
-		
-		copylen = min_no_const(len, PATH_MAX-1);
-		
-		strncpy(tmppath, lib, copylen);
-		tmppath[copylen] = 0;
-		
-		if (SDL_GL_LoadLibrary(tmppath) == 0) {
-			/* success */
-			return;
-		}
-		
-		lib += len;
-		lib += strspn(lib, ":");
-	}
-	
-	fprintf(stderr, "ERROR: unable to initialize opengl library: %s\n", SDL_GetError());
-	exit(EXIT_FAILURE);
-}
-
-/* ** */
 static bool SDLCALL SDLEventFilter(void* userData, SDL_Event* event) {
 	(void) userData;
 
@@ -695,11 +658,9 @@ static int SetOGLVideoMode(int Width, int Height)
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-		load_opengl_library(opengl_library);
-
 		// These should be configurable video options.
-		//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-		//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 		window = SDL_CreateWindow("Aliens vs Predator",
 								  WindowWidth,
