@@ -834,6 +834,7 @@ static void SetupNewMenu(enum AVPMENU_ID menuID)
 		case AVPMENU_USERPROFILEENTERNAME:
 		{
 			AvPMenus.UserEnteringText = 1;
+			SDL_StartTextInput(NULL);
 			KeyboardEntryQueue_Clear();
 			AvPMenus.MenuElements->c.TextPtr = UserProfilePtr->Name;
 			UserProfilePtr->Name[0] = 0;
@@ -843,6 +844,7 @@ static void SetupNewMenu(enum AVPMENU_ID menuID)
 		case AVPMENU_MULTIPLAYER_SAVECONFIG:
 		{
 			AvPMenus.UserEnteringText = 1;
+			SDL_StartTextInput(NULL);
 			KeyboardEntryQueue_Clear();
 			AvPMenus.WidthLeftForText = 0; //will be calculated properly when menus are drawn
 			break;
@@ -1963,6 +1965,37 @@ static void RenderConfigurationDescriptionString()
 	}
 }
 
+/*ATSB: since this darn input issue is still here in SDL3, let's have some alien-inspired random names instead*/
+static void GenerateRandomName(char* dest, size_t maxLength)
+{
+	const char* names[] = {
+		"Ripley", "Hicks", "Hudson", "Vasquez", "Bishop", "Ash", "Dallas", "Kane",
+		"Lambert", "Parker", "Brett", "Burke", "Newt", "Clemens", "Dillon", "David",
+		"Shaw", "Daniels", "Jones", "Gorman", "Apone", "Drake", "Frost", "Ferro",
+		"Spunkmeyer", "Wierzbowski", "Dietrich", "Crowe", "Walter", "Tennessee"
+	};
+	const char* locations_creatures_etc[] = {
+		"Nostromo", "Sulaco", "Hadley", "Acheron", "Fiorina", "Xenomorph", "Neomorph",
+		"Facehugger", "Wey_Yu", "USCM", "Sevastopol", "Prometheus", "Covenant",
+		"Jonesy", "LV-426", "Fury161", "Gateway", "Auriga", "Origae6", "TheCompany",
+		"Chestburster", "Queen", "Drone", "Warrior"
+	};\
+	int numNames = sizeof(names) / sizeof(names[0]);
+	int numLocationsEtc = sizeof(locations_creatures_etc) / sizeof(locations_creatures_etc[0]);
+	int choice = rand() % 10;
+
+	if (choice < 7) {
+		const char* name = names[rand() % numNames];
+		strncpy(dest, name, maxLength - 1);
+		dest[maxLength - 1] = '\0';
+	}
+	else {
+		const char* loc = locations_creatures_etc[rand() % numLocationsEtc];
+		strncpy(dest, loc, maxLength - 1);
+		dest[maxLength - 1] = '\0';
+	}
+	dest[maxLength - 1] = '\0';
+}
 
 static void ActUponUsersInput(void)
 {
@@ -1995,7 +2028,9 @@ static void ActUponUsersInput(void)
 			{
 				if(AvPMenus.PositionInTextField==0)
 				{
-					strcpy(elementPtr->c.TextPtr,"Player");
+					// Generate a random name
+					GenerateRandomName(elementPtr->c.TextPtr, elementPtr->b.MaxTextLength);
+					AvPMenus.PositionInTextField = strlen(elementPtr->c.TextPtr);
 				}
 				AvPMenus.CurrentlySelectedElement++;
 			}
@@ -2062,9 +2097,7 @@ static void ActUponUsersInput(void)
 				}
 
 			}
-		
 			KeyboardEntryQueue_Clear();
-			
 		}
 	}
 	else if (AvPMenus.UserEnteringNumber)
@@ -2425,6 +2458,7 @@ static void InteractWithMenuElement(enum AVPMENU_ELEMENT_INTERACTION_ID interact
 		case AVPMENU_ELEMENT_TEXTFIELD:
 		{
 			AvPMenus.UserEnteringText = 1;
+			SDL_StartTextInput(NULL);
 			KeyboardEntryQueue_Clear();
 			AvPMenus.PositionInTextField = strlen(elementPtr->c.TextPtr);
 			elementPtr->c.TextPtr[AvPMenus.PositionInTextField] = 0;
@@ -2434,6 +2468,7 @@ static void InteractWithMenuElement(enum AVPMENU_ELEMENT_INTERACTION_ID interact
 		case AVPMENU_ELEMENT_TEXTFIELD_SMALLWRAPPED:
 		{
 			AvPMenus.UserEnteringText = 1;
+			SDL_StartTextInput(NULL);
 			KeyboardEntryQueue_Clear();
 			AvPMenus.PositionInTextField = strlen(elementPtr->c.TextPtr);
 			AvPMenus.WidthLeftForText = 0; //will be calculated properly when menus are drawn
@@ -5445,8 +5480,10 @@ static void KeyboardEntryQueue_StartProcessing(void)
 
 static char KeyboardEntryQueue_ProcessCharacter(void)
 {
-	if (KeyboardEntryQueue_ProcessingIndex==MAX_ITEMS_IN_KEYBOARDENTRYQUEUE) return 0;
-
+	if (KeyboardEntryQueue_ProcessingIndex >= NumberOfItemsInKeyboardEntryQueue)
+	{
+		return 0;
+	}
 	return KeyboardEntryQueue[KeyboardEntryQueue_ProcessingIndex++];
 }
 
