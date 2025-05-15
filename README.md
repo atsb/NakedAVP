@@ -38,6 +38,8 @@ $ cd build
 $ cmake ..
 $ make
 
+Please note that on Linux, only GCC is supported.
+
 If all goes well, an executable named "avp" will be built.
 
 Part 3: Installation
