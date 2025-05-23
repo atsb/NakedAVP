@@ -471,7 +471,6 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 			/* walk = half speed */
 			strafeSpeed = (strafeSpeed)/2;
 			forwardSpeed = (forwardSpeed)/2;
-			turnSpeed = (turnSpeed)/2;
 		}	
 		
 		/* Marker */
