@@ -24,8 +24,6 @@ extern "C" {
 
 #define OUR_ABS(x)                (((x) < 0) ? -(x) : (x))
 #define OUR_SIGN(x)	             (((x) < 0) ? -1 : +1)
-#define OUR_INT_TO_FIXED(x)	 	 (int) ((x) * (65536))
-#define OUR_FIXED_TO_INT(x)		 (int) ((x) / (65536))
 #define OUR_MUL_INT(a, b)	       ((a) * (b))
 #define OUR_ISR(a, shift)		    ((a) >> (shift))
 

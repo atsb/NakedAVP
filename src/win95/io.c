@@ -610,51 +610,66 @@ void ExitSystem(void)
 void ResetFrameCounter(void)
 {
 	lastTickCount = timeGetTime();
-	
-	/* KJL 15:03:33 12/16/96 - I'm setting NormalFrameTime too, rather than checking that it's
-	non-zero everytime I have to divide by it, since it usually is zero on the first frame. */
-	NormalFrameTime = 65536 >> 4;
+
+	NormalFrameTime = ONE_FIXED >> 4;
 	PrevNormalFrameTime = NormalFrameTime;
 
 	RealFrameTime = NormalFrameTime;
 	FrameRate = 16;
-	GlobalFrameCounter=0;
+	GlobalFrameCounter = 0;
 	CloakingPhase = 0;
-	
-	
-	RouteFinder_CallsThisFrame=0;
+
+	RouteFinder_CallsThisFrame = 0;
 }
+
 void FrameCounterHandler(void)
 {
 	int newTickCount = timeGetTime();
-	int fcnt;
+	int fcnt_milliseconds;
 
-	fcnt = newTickCount - lastTickCount;
+	fcnt_milliseconds = newTickCount - lastTickCount;
 	lastTickCount = newTickCount;
 
-    if (fcnt == 0)
-	  fcnt = 1; /* for safety */
+	if (fcnt_milliseconds <= 0) {
+		fcnt_milliseconds = 1;
+	}
 
-	FrameRate = TimerFrame / fcnt;
+	if (TimerFrame > 0 && fcnt_milliseconds > 0) {
+		FrameRate = TimerFrame / fcnt_milliseconds;
+	}
+	else {
+		FrameRate = 0;
+	}
 
 	PrevNormalFrameTime = NormalFrameTime;
-	NormalFrameTime = DIV_FIXED(fcnt,TimerFrame);
+
+	if (TimerFrame > 0) {
+		int fixed_fcnt = INT_TO_FIXED(fcnt_milliseconds);
+		int fixed_TimerFrame = INT_TO_FIXED(TimerFrame);
+		NormalFrameTime = DIV_FIXED(fixed_fcnt, fixed_TimerFrame);
+	}
+	else {
+		NormalFrameTime = ONE_FIXED >> 4;
+	}
 
 	RealFrameTime = NormalFrameTime;
 
+	if (TimeScale != ONE_FIXED)
 	{
-		if (TimeScale!=ONE_FIXED)
-		{
-			NormalFrameTime = MUL_FIXED(NormalFrameTime,TimeScale);
-		}
-
+		NormalFrameTime = MUL_FIXED(NormalFrameTime, TimeScale);
 	}
-	/* cap NormalFrameTime if frame rate is really low */
-	if (NormalFrameTime>16384) NormalFrameTime=16384;
-	GlobalFrameCounter++;
-	CloakingPhase += NormalFrameTime>>5;
 
-	RouteFinder_CallsThisFrame=0;
+	if (NormalFrameTime > (ONE_FIXED / 4)) {
+		NormalFrameTime = (ONE_FIXED / 4);
+	}
+
+	if (NormalFrameTime <= 0) {
+		NormalFrameTime = 1;
+	}
+
+	GlobalFrameCounter++;
+	CloakingPhase += (NormalFrameTime >> 5);
+	RouteFinder_CallsThisFrame = 0;
 }
 
 /*

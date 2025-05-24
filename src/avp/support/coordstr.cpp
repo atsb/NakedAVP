@@ -87,7 +87,7 @@ CoordinateWithVelocity :: CoordinateWithVelocity
 	)
 {
 	FixP_Velocity_Val	= FixP_Velocity;
-	FixP_Position_Val	= OUR_INT_TO_FIXED( Int_CurrentCoord_Val );
+	FixP_Position_Val	= INT_TO_FIXED( Int_CurrentCoord_Val );
 }
 
 CoordinateWithVelocity :: ~CoordinateWithVelocity()
@@ -101,7 +101,7 @@ void CoordinateWithVelocity :: SetCoord_Int
 )
 {
 	Int_CurrentCoord_Val	= Int_NewCoord;
-	FixP_Position_Val		= OUR_INT_TO_FIXED( Int_CurrentCoord_Val );
+	FixP_Position_Val		= INT_TO_FIXED( Int_CurrentCoord_Val );
 }
 
 void CoordinateWithVelocity :: SetCoord_FixP
@@ -109,7 +109,7 @@ void CoordinateWithVelocity :: SetCoord_FixP
 	int FixP_NewCoord
 )
 {
-	Int_CurrentCoord_Val	= OUR_FIXED_TO_INT( FixP_NewCoord );
+	Int_CurrentCoord_Val	= FIXED_TO_INT( FixP_NewCoord );
 	FixP_Position_Val		= FixP_NewCoord;
 }
 
@@ -126,7 +126,7 @@ void CoordinateWithVelocity :: ApplyVelocity
 {
 	FixP_Position_Val += MUL_FIXED(FixP_Time, FixP_Velocity_Val);
 
-	Int_CurrentCoord_Val = OUR_FIXED_TO_INT( FixP_Position_Val );
+	Int_CurrentCoord_Val = FIXED_TO_INT( FixP_Position_Val );
 }
 
 int CoordinateWithVelocity :: GetCoord_Int_RoundedUp(void)
@@ -168,10 +168,10 @@ PulsingCoordinate :: PulsingCoordinate
 	)	
 {
 	Int_Target0_Val = Int_InitialCoord;
-	FixP_Target0_Val = OUR_INT_TO_FIXED( Int_Target0_Val );
+	FixP_Target0_Val = INT_TO_FIXED( Int_Target0_Val );
 
 	Int_Target1_Val	= Int_SecondCoord;
-	FixP_Target1_Val = OUR_INT_TO_FIXED( Int_Target1_Val );
+	FixP_Target1_Val = INT_TO_FIXED( Int_Target1_Val );
 
 }
 
@@ -338,7 +338,7 @@ HomingCoordinate::HomingCoordinate
 	)
 {
 	Int_TargetCoord_Val = Int_TargetCoord;
-	FixP_TargetCoord_Val = OUR_INT_TO_FIXED( Int_TargetCoord );
+	FixP_TargetCoord_Val = INT_TO_FIXED( Int_TargetCoord );
 	
 	FixP_IdealVelocity_Val = DIV_FIXED
 	(
@@ -499,7 +499,7 @@ void AcyclicHomingCoordinate :: SetTarget_Int
 	#endif
 
 	Int_TargetCoord_Val = Int_TargetCoord;
-	FixP_TargetCoord_Val = OUR_INT_TO_FIXED( Int_TargetCoord );
+	FixP_TargetCoord_Val = INT_TO_FIXED( Int_TargetCoord );
 	
 	FixP_IdealVelocity_Val = DIV_FIXED(
 		(FixP_TargetCoord_Val - FixP_Position_Val),
@@ -632,7 +632,7 @@ void AcyclicFixedSpeedHoming :: SetTarget_Int
 )
 {
 	Int_TargetCoord_Val = Int_TargetCoord;
-	FixP_TargetCoord_Val = OUR_INT_TO_FIXED( Int_TargetCoord );
+	FixP_TargetCoord_Val = INT_TO_FIXED( Int_TargetCoord );
 	
 	#if 1
 	SetVelocity_FixP
@@ -662,7 +662,7 @@ void AcyclicFixedSpeedHoming :: SetTarget_FixP
 	int FixP_TargetCoord
 )
 {
-	Int_TargetCoord_Val = OUR_FIXED_TO_INT( FixP_TargetCoord );
+	Int_TargetCoord_Val = FIXED_TO_INT( FixP_TargetCoord );
 	FixP_TargetCoord_Val = FixP_TargetCoord;
 	
 	#if 1

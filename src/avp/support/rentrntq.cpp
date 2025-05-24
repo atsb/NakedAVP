@@ -11,6 +11,7 @@
  *******************************************************************/
 
 /* Includes ********************************************************/
+#include <SDL3/SDL.h>
 #include "3dc.h"
 #include "gadget.h"
 
@@ -82,6 +83,7 @@ void RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_CHAR
 	char Ch
 )
 {
+	SDL_StartTextInput(NULL);
 	if ( NumQMessages < MAX_Q_MESSAGES )
 	{
 		OurQ[ NumQMessages ] . QEntryCat = QEntryCat_WM_CHAR;

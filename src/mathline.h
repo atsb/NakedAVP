@@ -33,34 +33,20 @@
 
 static __inline int MUL_FIXED(int a, int b)
 {
-/*
-	int retval;
-	_asm
-	{
-		mov eax,a
-		imul b
-		shrd eax,edx,16
-		mov retval,eax
-	}
-*/
-
-#if defined(ASM386)
-	int retval;
-__asm__("imull	%2			\n\t"
-	"shrdl	$16, %%edx, %%eax	\n\t"
-	: "=a" (retval)
-	: "0" (a), "m" (b)
-	: "%edx", "cc"
-	);
-	return retval;
-#else
 	__int64 aa = (__int64) a;
 	__int64 bb = (__int64) b;
 	
 	__int64 cc = aa * bb;
 	
 	return (int) ((cc >> 16) & 0xffffffff);
-#endif
+}
+
+static __inline int INT_TO_FIXED(int i) {
+    return (int)(((__int64)i) << ONE_FIXED_SHIFT);
+}
+
+static __inline int FIXED_TO_INT(int f) {
+    return (int)(f / ONE_FIXED);
 }
 
 #endif

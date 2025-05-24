@@ -102,7 +102,7 @@ private:
 	}
 	inline int TeletypeDaemon::CursorXOffset(void)
 	{
-		return OUR_FIXED_TO_INT( FixP_PixelsCovered );
+		return FIXED_TO_INT( FixP_PixelsCovered );
 	}
 
 namespace TeletypeCursor
@@ -302,7 +302,7 @@ TeletypeDaemon :: TeletypeDaemon
 
 	FixP_TotalPixels = 
 	#if 1
-	OUR_INT_TO_FIXED
+	INT_TO_FIXED
 	(
 		pTeletypeGadg -> GetStringWithoutReference() -> CalcSize
 		(
@@ -310,7 +310,7 @@ TeletypeDaemon :: TeletypeDaemon
 		) . w
 	);
 	#else
-	OUR_INT_TO_FIXED
+	INT_TO_FIXED
 	(
 		10
 		*		

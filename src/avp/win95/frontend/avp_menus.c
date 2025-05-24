@@ -5455,6 +5455,7 @@ static int KeyboardEntryQueue_ProcessingIndex;
 
 void KeyboardEntryQueue_Add(char c)
 {
+	SDL_StartTextInput(NULL);
 	if (c<32) return;
 
 	if (NumberOfItemsInKeyboardEntryQueue<MAX_ITEMS_IN_KEYBOARDENTRYQUEUE)
@@ -5466,6 +5467,7 @@ void KeyboardEntryQueue_Add(char c)
 static void KeyboardEntryQueue_Clear(void)
 {
 	int i;
+	SDL_StartTextInput(NULL);
 	for (i=0; i<MAX_ITEMS_IN_KEYBOARDENTRYQUEUE; i++)
 	{
 		KeyboardEntryQueue[i] = 0;
@@ -5480,6 +5482,7 @@ static void KeyboardEntryQueue_StartProcessing(void)
 
 static char KeyboardEntryQueue_ProcessCharacter(void)
 {
+	SDL_StartTextInput(NULL);
 	if (KeyboardEntryQueue_ProcessingIndex >= NumberOfItemsInKeyboardEntryQueue)
 	{
 		return 0;

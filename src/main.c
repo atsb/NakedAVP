@@ -1006,14 +1006,44 @@ static int KeySymToKey(int keysym)
 	}
 }
 
+char ShiftDown = 0;
+char CapsLockOn = 0;
+const char ShiftAddition[2] = { 32, 0 };
+
 static void handle_keypress(int key, int unicode, int press)
 {	
 	if (key == -1)
 		return;
 
-	if (press) {
-		switch(key) {
+	// Nasty hack to allow temporary character entry by TCH68k on Github
+	
+	if ((key == KEY_LEFTSHIFT) || (key == KEY_RIGHTSHIFT))
+	{
+		ShiftDown = press;
+	}
+	else if (press) {
+		if ((key >= KEY_A) && (key <= KEY_Z))
+		{
+			RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_CHAR(65 + (key - KEY_A) + ShiftAddition[ShiftDown ^ CapsLockOn]);
+		}
+		else if ((key >= KEY_0) && (key <= KEY_9))
+		{
+			RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_CHAR(48 + (key - KEY_0)); /* TODO: Shift numbers -> symbols */
+		}
+		else if ((key >= KEY_NUMPAD0) && (key <= KEY_NUMPAD9))
+		{
+			RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_CHAR(48 + (key - KEY_NUMPAD0));
+		}
+		else if (false) /* TODO: other symbols */
+		{
+			// BOO!
+		}
+	else switch (key) {
+		case KEY_CAPS:
+			CapsLockOn ^= 1;
+			break;
 			case KEY_CR:
+				SDL_StartTextInput(NULL);
 				RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_CHAR('\r');
 				break;
 			case KEY_BACKSPACE:
@@ -1047,6 +1077,7 @@ static void handle_keypress(int key, int unicode, int press)
 				RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_KEYDOWN(VK_TAB);
 				break;
 			default:
+				SDL_StartTextInput(NULL);
 				break;
 		}
 	}
@@ -1093,6 +1124,7 @@ void CheckForWindowsMessages()
 				}
 				break;
 			case SDL_EVENT_TEXT_INPUT: {
+				SDL_StartTextInput(NULL);
 					int unicode = event.text.text[0]; //TODO convert to utf-32
 					if (unicode && !(unicode & 0xFF80)) {
 						RE_ENTRANT_QUEUE_WinProc_AddMessage_WM_CHAR(unicode);
@@ -1101,6 +1133,7 @@ void CheckForWindowsMessages()
 				}
 				break;
 			case SDL_EVENT_KEY_DOWN:
+				SDL_StartTextInput(NULL);
 				if (event.key.key == SDLK_PRINTSCREEN) {
 					if (HavePrintScn == 0)
 						GotPrintScn = 1;
@@ -1110,6 +1143,7 @@ void CheckForWindowsMessages()
 				}
 				break;
 			case SDL_EVENT_KEY_UP:
+				SDL_StartTextInput(NULL);
 				if (event.key.key == SDLK_PRINTSCREEN) {
 					GotPrintScn = 0;
 					HavePrintScn = 0;
@@ -1136,6 +1170,7 @@ void CheckForWindowsMessages()
 			case SDL_EVENT_QUIT:
 				AvP.MainLoopRunning = 0; /* TODO */
 				exit(0); //TODO
+				SDL_StopTextInput(NULL);
 				break;
 		}
 	}
