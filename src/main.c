@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -45,6 +45,18 @@
 #include "version.h"
 #include "fmv.h"
 
+#if defined(__APPLE__)
+#include <strings.h>
+#define secure_zero(p, n)  secure_avpzero((p),(n))
+#elif defined(__linux__)
+#include <string.h>
+#define secure_zero(p, n)  secure_avpzero((p),(n))
+#else
+static inline void secure_avpzero(void* p, size_t n) {
+	volatile unsigned char* vp = (volatile unsigned char*)p;
+	while (n--) *vp++ = 0;
+}
+#endif
 
 #if defined(__IPHONEOS__) || defined(__ANDROID__)
 #define FIXED_WINDOW_SIZE 1
@@ -1100,7 +1112,7 @@ void CheckForWindowsMessages()
 	
 	GotAnyKey = 0;
 	DebouncedGotAnyKey = 0;
-	memset(DebouncedKeyboardInput, 0, sizeof(DebouncedKeyboardInput));
+	secure_avpzero(DebouncedKeyboardInput, sizeof DebouncedKeyboardInput);
 	
 	wantmouse =	(SDL_GetWindowRelativeMouseMode(window) == true);
 

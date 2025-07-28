@@ -19,15 +19,17 @@ void DeallocMem(void *__ptr);
 /* macro defined in mem3dc.h that allows */
 /* for debugging info.                   */
 
-void *AllocMem(size_t __size)
-{
-	GLOBALASSERT(__size>0);
-	#if debug
-	alloc_cnt++;	
-	#endif
-
-	return malloc(__size);
-};
+void* AllocMem(size_t __size) {
+	GLOBALASSERT(__size > 0);
+	if (__size == 0)
+		__size = 1;
+	void* p = calloc(1, __size);
+	if (!p)
+	{
+		printf("ERROR in AllocMem");
+	}
+	return p;
+}
 
 /* Note: Never use DeallocMem directly !  */
 /* Instead use DeallocateMem() which is a */
