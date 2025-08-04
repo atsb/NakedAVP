@@ -57,6 +57,7 @@ static inline void secure_avpzero(void* p, size_t n) {
 #include <string.h>
 #define secure_zero(p, n)  secure_avpzero((p),(n))
 #endif
+#endif
 
 #if defined(__IPHONEOS__) || defined(__ANDROID__)
 #define FIXED_WINDOW_SIZE 1
