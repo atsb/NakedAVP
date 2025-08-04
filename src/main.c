@@ -48,14 +48,14 @@
 #if defined(__APPLE__)
 #include <strings.h>
 #define secure_zero(p, n)  secure_avpzero((p),(n))
-#elif defined(__linux__)
-#include <string.h>
-#define secure_zero(p, n)  secure_avpzero((p),(n))
-#else
+#if defined(_WIN32)
 static inline void secure_avpzero(void* p, size_t n) {
 	volatile unsigned char* vp = (volatile unsigned char*)p;
 	while (n--) *vp++ = 0;
 }
+#else
+#include <string.h>
+#define secure_zero(p, n)  secure_avpzero((p),(n))
 #endif
 
 #if defined(__IPHONEOS__) || defined(__ANDROID__)
