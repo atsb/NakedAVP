@@ -45,19 +45,10 @@
 #include "version.h"
 #include "fmv.h"
 
-#if defined(__APPLE__)
-#include <strings.h>
-#define secure_zero(p, n)  secure_avpzero((p),(n))
-#if defined(_WIN32)
 static inline void secure_avpzero(void* p, size_t n) {
 	volatile unsigned char* vp = (volatile unsigned char*)p;
 	while (n--) *vp++ = 0;
 }
-#else
-#include <string.h>
-#define secure_zero(p, n)  secure_avpzero((p),(n))
-#endif
-#endif
 
 #if defined(__IPHONEOS__) || defined(__ANDROID__)
 #define FIXED_WINDOW_SIZE 1
@@ -133,7 +124,7 @@ static GLsizei FullscreenTextureHeight;
 /* originally was "/usr/lib/libGL.so.1:/usr/lib/tls/libGL.so.1:/usr/X11R6/lib/libGL.so" */
 static const char * opengl_library = NULL;
 
-static const char * gamedatapath = NULL;
+static char * gamedatapath = NULL;
 
 /* ** */
 
