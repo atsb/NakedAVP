@@ -1,0 +1,51 @@
+name: Fedora build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: Fedora ${{ matrix.fedora_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora_version: [ '42', '43' ]
+    container: fedora:${{ matrix.fedora_version }}
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install dependencies
+      run: dnf update -y && dnf install -y gcc gcc-c++ cmake SDL3-devel openal-soft-devel
+
+    - name: Configure CMake
+      run: |
+        gcc --version
+        cmake --version
+        cmake -S . -B build/ -Wdev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=g++
+
+    - name: Build ${{env.BUILD_TYPE}}
+      run: cmake --build . --config ${{env.BUILD_TYPE}} -- -j4
+      working-directory: ${{github.workspace}}/build
+
+    - uses: actions/upload-artifact@v6
+      with:
+        name: avp-fedora-${{ matrix.fedora_version }}-amd64.zip
+        if-no-files-found: 'error'
+        path: |
+          build/*
