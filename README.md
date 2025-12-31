@@ -45,21 +45,24 @@ If all goes well, an executable named "avp" will be built.
 Part 3: Installation
 --------------------
 
-All of the AvP game data, files and directories, need to be lowercase. 
+Game data is required to boot the avp binary. The assets are available via:
+
+ - [GOG](https://www.gog.com/en/game/aliens_versus_predator_classic_2000)
+ - [Steam](https://store.steampowered.com/app/3730/Aliens_versus_Predator_Classic_2000/)
+ - Original CD installation media 
+
+*All of the AvP game data, files and directories, need to be changed to lowercase.*
+
 Either copy the avp executable to the game data directory or set the
-AVP_DATA environment variable to the game data directory.
+`AVP_DATA` environment variable to the game data directory.
 
-Local user settings are stored in ~/.avp.
+Platform specific data directories are as follows:
 
-For GNU/Linux systems and other *NIX/BSD systems, the standard default directory is:
-/usr/local/games/AliensVsPredator
+ - MacOS: `/Users/$USER/Library/Application Support/AliensVsPredator/`
+ - GNU/Linux &amp; other *NIX/BSD: `/usr/local/games/AliensVsPredator`
 
-This is for ease of installation and general usage/cleanliness.
+Local user settings are stored in `~/.avp`.
 
-For macOS:
-Place the game data from GOG/Steam/CD into here: /Users/$USER/Library/Application Support/AliensVsPredator/
-
-Then use the binary to execute.  The game will load.
 
 Part 4: Credits
 ---------------
@@ -73,6 +76,8 @@ Appendix B: Gold edition MD5s
 -----------------------------
 
 A proper install of the Gold edition should look similar to this:
+
+```
 MD5 (avp_huds/alien.rif) = 4267d305ad3f18e6683f86b4eb755665
 MD5 (avp_huds/alien_hud.rif) = ff6b892af4665c81082e24a43903e987
 MD5 (avp_huds/disk.rif) = fe9a1f4e5caab35e38aabdbbb445aabc
@@ -274,6 +279,7 @@ MD5 (fastfile/tex7.ffl) = a1ee192c4a44d5bdb6dc1fe290c9fa77
 MD5 (fastfile/tex8.ffl) = 69c927deb5448b63a9c11186e8c29d3b
 MD5 (fastfile/tex9.ffl) = 156b6dcdc3b92a9d6c0cfdfbc2421b10
 MD5 (language.txt) = 10564fea944ef6680191ecc89a4616d5
+```
 
 Part 5: Gibbon's Additions
 --------------------------
