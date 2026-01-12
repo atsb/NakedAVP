@@ -1,3 +1,4 @@
+#include <SDL3/SDL.h>
 #include "3dc.h"
 #include "inline.h"
 #include "module.h"
