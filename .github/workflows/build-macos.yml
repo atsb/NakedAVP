@@ -1,0 +1,50 @@
+name: MacOS build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    # macos-latest is currently macos-15-arm64
+    name: macOS ${{ matrix.os_version }}
+    runs-on: macos-${{ matrix.os_version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os_version: '15', arch: 'arm64' }  # macos-15 is Apple silicon (arm64)
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install dependencies
+      run: brew install sdl3
+
+    - name: Configure CMake
+      run: |
+        cmake --version
+        cmake -S . -B build/ -Wdev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_OSX_ARCHITECTURES=${{matrix.arch}}
+
+    - name: Build ${{env.BUILD_TYPE}}
+      run: cmake --build . --config ${{env.BUILD_TYPE}} -- -j4
+      working-directory: ${{github.workspace}}/build
+
+    - uses: actions/upload-artifact@v6
+      with:
+        name: avp-osx-${{ matrix.os_version }}-${{matrix.arch}}.zip
+        if-no-files-found: 'error'
+        path: |
+          build/*

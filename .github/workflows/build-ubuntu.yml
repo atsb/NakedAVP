@@ -1,0 +1,51 @@
+name: Ubuntu build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: Ubuntu ${{ matrix.ubuntu_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu_version: [ '25.10' ] # Ubuntu 25.04 or above is needed for SDL3
+    container: ubuntu:${{ matrix.ubuntu_version }}
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install dependencies
+      run: apt-get update && apt-get install -y build-essential cmake libsdl3-dev libopenal-dev
+
+    - name: Configure CMake
+      run: |
+        gcc --version
+        cmake --version
+        cmake -S . -B build/ -Wdev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=g++
+
+    - name: Build ${{env.BUILD_TYPE}}
+      run: cmake --build . --config ${{env.BUILD_TYPE}} -- -j4
+      working-directory: ${{github.workspace}}/build
+
+    - uses: actions/upload-artifact@v6
+      with:
+        name: avp-ubuntu-${{ matrix.ubuntu_version }}-amd64.zip
+        if-no-files-found: 'error'
+        path: |
+          build/*

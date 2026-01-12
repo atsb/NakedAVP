@@ -5,6 +5,7 @@
 *.DS_Store
 Build/.*
 Build/
+build/
 
 # Object files
 *.o

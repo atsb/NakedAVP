@@ -1,6 +1,9 @@
 # Aliens vs Predator - https://github.com/atsb/NakedAVP
 CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
 
+# be specific on C++ standard being used
+SET(CMAKE_CXX_STANDARD 11)
+
 # default to Release
 IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     MESSAGE(STATUS "No build type specified, defaulting to Release")
