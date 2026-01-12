@@ -891,7 +891,7 @@ void SpriteResizing(SHAPEHEADER *sptr)
 
 				else {
 
-					txf_imageptr = &txaf->txf_image;
+					txf_imageptr = (int *) &txaf->txf_image;
 					num_images = 1;
 
 					txf_uvarrayptr = &txaf->txf_uvdata;
