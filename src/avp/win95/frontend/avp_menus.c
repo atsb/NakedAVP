@@ -37,6 +37,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+extern SDL_Window *window;
+static inline void Menus_StartTextInput(void) { if (window) SDL_StartTextInput(window); }
+static inline void Menus_StopTextInput(void) { if (window) SDL_StopTextInput(window); }
+void Menus_HandleSDLEvent_SDL3(const SDL_Event * ev);
+
 int SelectDirectDrawObject(void *pGUID);
                     
 extern void StartMenuBackgroundBink(void);
@@ -786,7 +791,7 @@ static void SetupNewMenu(enum AVPMENU_ID menuID)
 	AvPMenus.PositionInTextField = 0;
 	AvPMenus.WidthLeftForText = 0;
 
-
+	Menus_StopTextInput();
 	/* menu specific stuff */
 	switch (menuID)
 	{
@@ -835,19 +840,19 @@ static void SetupNewMenu(enum AVPMENU_ID menuID)
 		case AVPMENU_USERPROFILEENTERNAME:
 		{
 			AvPMenus.UserEnteringText = 1;
-			SDL_StartTextInput(NULL);
 			KeyboardEntryQueue_Clear();
 			AvPMenus.MenuElements->c.TextPtr = UserProfilePtr->Name;
 			UserProfilePtr->Name[0] = 0;
 			AvPMenus.WidthLeftForText = 0; //will be calculated properly when menus are drawn
+			Menus_StartTextInput();
 			break;
 		}
 		case AVPMENU_MULTIPLAYER_SAVECONFIG:
 		{
 			AvPMenus.UserEnteringText = 1;
-			SDL_StartTextInput(NULL);
 			KeyboardEntryQueue_Clear();
 			AvPMenus.WidthLeftForText = 0; //will be calculated properly when menus are drawn
+			Menus_StartTextInput();
 			break;
 		}
 
@@ -1966,37 +1971,6 @@ static void RenderConfigurationDescriptionString()
 	}
 }
 
-/*ATSB: since this darn input issue is still here in SDL3, let's have some alien-inspired random names instead*/
-static void GenerateRandomName(char* dest, size_t maxLength)
-{
-	const char* names[] = {
-		"Ripley", "Hicks", "Hudson", "Vasquez", "Bishop", "Ash", "Dallas", "Kane",
-		"Lambert", "Parker", "Brett", "Burke", "Newt", "Clemens", "Dillon", "David",
-		"Shaw", "Daniels", "Jones", "Gorman", "Apone", "Drake", "Frost", "Ferro",
-		"Spunkmeyer", "Wierzbowski", "Dietrich", "Crowe", "Walter", "Tennessee"
-	};
-	const char* locations_creatures_etc[] = {
-		"Nostromo", "Sulaco", "Hadley", "Acheron", "Fiorina", "Xenomorph", "Neomorph",
-		"Facehugger", "Wey_Yu", "USCM", "Sevastopol", "Prometheus", "Covenant",
-		"Jonesy", "LV-426", "Fury161", "Gateway", "Auriga", "Origae6", "TheCompany",
-		"Chestburster", "Queen", "Drone", "Warrior"
-	};\
-	int numNames = sizeof(names) / sizeof(names[0]);
-	int numLocationsEtc = sizeof(locations_creatures_etc) / sizeof(locations_creatures_etc[0]);
-	int choice = rand() % 10;
-
-	if (choice < 7) {
-		const char* name = names[rand() % numNames];
-		strncpy(dest, name, maxLength - 1);
-		dest[maxLength - 1] = '\0';
-	}
-	else {
-		const char* loc = locations_creatures_etc[rand() % numLocationsEtc];
-		strncpy(dest, loc, maxLength - 1);
-		dest[maxLength - 1] = '\0';
-	}
-	dest[maxLength - 1] = '\0';
-}
 
 static void ActUponUsersInput(void)
 {
@@ -2019,7 +1993,7 @@ static void ActUponUsersInput(void)
 		{
 			elementPtr->c.TextPtr[AvPMenus.PositionInTextField] = 0;
 			AvPMenus.UserEnteringText = 0;
-
+			Menus_StopTextInput();
 			// KJL 10:09:35 09/02/00 - when the user has entered their name,
 			// move down to the next option. If the user enters a null
 			// string, replace it with a placeholder name		
@@ -2029,9 +2003,7 @@ static void ActUponUsersInput(void)
 			{
 				if(AvPMenus.PositionInTextField==0)
 				{
-					// Generate a random name
-					GenerateRandomName(elementPtr->c.TextPtr, elementPtr->b.MaxTextLength);
-					AvPMenus.PositionInTextField = strlen(elementPtr->c.TextPtr);
+					strcpy(elementPtr->c.TextPtr,"Player");
 				}
 				AvPMenus.CurrentlySelectedElement++;
 			}
@@ -2098,7 +2070,9 @@ static void ActUponUsersInput(void)
 				}
 
 			}
+		
 			KeyboardEntryQueue_Clear();
+			
 		}
 	}
 	else if (AvPMenus.UserEnteringNumber)
@@ -2459,20 +2433,20 @@ static void InteractWithMenuElement(enum AVPMENU_ELEMENT_INTERACTION_ID interact
 		case AVPMENU_ELEMENT_TEXTFIELD:
 		{
 			AvPMenus.UserEnteringText = 1;
-			SDL_StartTextInput(NULL);
 			KeyboardEntryQueue_Clear();
 			AvPMenus.PositionInTextField = strlen(elementPtr->c.TextPtr);
 			elementPtr->c.TextPtr[AvPMenus.PositionInTextField] = 0;
 			AvPMenus.WidthLeftForText = 0; //will be calculated properly when menus are drawn
+			Menus_StartTextInput();
 			break;
 		}
 		case AVPMENU_ELEMENT_TEXTFIELD_SMALLWRAPPED:
 		{
 			AvPMenus.UserEnteringText = 1;
-			SDL_StartTextInput(NULL);
 			KeyboardEntryQueue_Clear();
 			AvPMenus.PositionInTextField = strlen(elementPtr->c.TextPtr);
 			AvPMenus.WidthLeftForText = 0; //will be calculated properly when menus are drawn
+			Menus_StartTextInput();
 			break;
 		}
 
@@ -5449,14 +5423,13 @@ void ShowMenuFrameRate(void)
 #endif
 }
 
-#define MAX_ITEMS_IN_KEYBOARDENTRYQUEUE 8
+#define MAX_ITEMS_IN_KEYBOARDENTRYQUEUE 64
 static char KeyboardEntryQueue[MAX_ITEMS_IN_KEYBOARDENTRYQUEUE];
 static int NumberOfItemsInKeyboardEntryQueue;
 static int KeyboardEntryQueue_ProcessingIndex;
 
 void KeyboardEntryQueue_Add(char c)
 {
-	SDL_StartTextInput(NULL);
 	if (c<32) return;
 
 	if (NumberOfItemsInKeyboardEntryQueue<MAX_ITEMS_IN_KEYBOARDENTRYQUEUE)
@@ -5468,7 +5441,6 @@ void KeyboardEntryQueue_Add(char c)
 static void KeyboardEntryQueue_Clear(void)
 {
 	int i;
-	SDL_StartTextInput(NULL);
 	for (i=0; i<MAX_ITEMS_IN_KEYBOARDENTRYQUEUE; i++)
 	{
 		KeyboardEntryQueue[i] = 0;
@@ -5483,11 +5455,8 @@ static void KeyboardEntryQueue_StartProcessing(void)
 
 static char KeyboardEntryQueue_ProcessCharacter(void)
 {
-	SDL_StartTextInput(NULL);
-	if (KeyboardEntryQueue_ProcessingIndex >= NumberOfItemsInKeyboardEntryQueue)
-	{
-		return 0;
-	}
+	if (KeyboardEntryQueue_ProcessingIndex==MAX_ITEMS_IN_KEYBOARDENTRYQUEUE) return 0;
+
 	return KeyboardEntryQueue[KeyboardEntryQueue_ProcessingIndex++];
 }
 
@@ -5686,29 +5655,38 @@ static void CheckForLoadGame()
 
 static void PasteFromClipboard(char* Text,int MaxTextLength)
 {
-	fprintf(stderr, "PasteFromClipboard(%p, %d)\n", Text, MaxTextLength);	
-#if 0
-	HANDLE hGlobal;
-	if(!Text)
-	{
+	fprintf(stderr, "PasteFromClipboard(%p, %d)\n", Text, MaxTextLength);
+	if (!Text || MaxTextLength <= 0)
 		return;
-	}
-
-	if(IsClipboardFormatAvailable(CF_TEXT))
+	char* clip = SDL_GetClipboardText();
+	if (clip)
 	{
-		OpenClipboard(0);
-		hGlobal = GetClipboardData(CF_TEXT);
-		if(hGlobal)
-		{
-			char* pGlobal = GlobalLock(hGlobal);
-			if(pGlobal)
-			{
-				strncpy(Text,pGlobal,MaxTextLength-1);
-				Text[MaxTextLength-1] = 0;
-				GlobalUnlock(hGlobal);
-			}
-		}
-		CloseClipboard();
+		strncpy(Text, clip, (size_t)MaxTextLength - 1);
+		Text[MaxTextLength - 1] = 0;
+		SDL_free(clip);
 	}
-#endif	
+}
+
+static inline void Menus_PushUTF8ToQueue_ASCIIOnly(const char* utf8)
+{
+	for (const unsigned char* p = (const unsigned char*)utf8; *p; ++p)
+	{
+		if (*p >= 32) {
+			KeyboardEntryQueue_Add((char)*p);
+		}
+	}
+}
+
+void Menus_HandleSDLEvent_SDL3(const SDL_Event * ev)
+ {
+	if (!ev) return;
+	switch (ev->type)
+	{
+	case SDL_EVENT_TEXT_INPUT:
+		if (ev->text.text && ev->text.text[0])
+			Menus_PushUTF8ToQueue_ASCIIOnly(ev->text.text);
+		break;
+	default:
+		break;
+	}
 }
