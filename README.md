@@ -1,6 +1,12 @@
 Aliens vs Predator  http://icculus.org/avp/
 ------------------------
 
+NOTE: Yes, NakedAVP is still undergoing development locally.  Be prepped for a 'HUGE' update coming soon.  I've been hard at work really getting the base utilities, code, inputs and most importantly, full FFMPEG/Smacker implementation (including the main menu).
+
+Currently, I'm running my local build via ASAN and hardening every aspect of the codebase (which is hugely time consuming).
+
+NakedAVP 1.3 will be the absolute 'definitive' edition :)
+
 Table of Contents:
 1. Introduction
 2. Compilation
