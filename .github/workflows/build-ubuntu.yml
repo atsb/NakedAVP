@@ -13,7 +13,6 @@ on:
 permissions:
   contents: read
 
-
 env:
   BUILD_TYPE: Release
 
@@ -24,28 +23,75 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ubuntu_version: [ '25.10' ] # Ubuntu 25.04 or above is needed for SDL3
+        ubuntu_version: ['25.10']
     container: ubuntu:${{ matrix.ubuntu_version }}
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - name: Install dependencies
-      run: apt-get update && apt-get install -y build-essential cmake libsdl3-dev libopenal-dev
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y             build-essential             ca-certificates             cmake             file             pkg-config             wget             libsdl3-dev             libavformat-dev             libavcodec-dev             libavutil-dev             libswscale-dev             libswresample-dev             patchelf
 
-    - name: Configure CMake
-      run: |
-        gcc --version
-        cmake --version
-        cmake -S . -B build/ -Wdev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=g++
+      - name: Configure CMake
+        run: |
+          gcc --version
+          cmake --version
+          pkg-config --modversion libavformat libavcodec libavutil libswscale libswresample
+          cmake -S . -B build -Wdev -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DCMAKE_CXX_COMPILER=g++
 
-    - name: Build ${{env.BUILD_TYPE}}
-      run: cmake --build . --config ${{env.BUILD_TYPE}} -- -j4
-      working-directory: ${{github.workspace}}/build
+      - name: Build ${{ env.BUILD_TYPE }}
+        run: cmake --build . --config ${{ env.BUILD_TYPE }} -- -j4
+        working-directory: ${{ github.workspace }}/build
 
-    - uses: actions/upload-artifact@v6
-      with:
-        name: avp-ubuntu-${{ matrix.ubuntu_version }}-amd64.zip
-        if-no-files-found: 'error'
-        path: |
-          build/*
+      - name: Prepare binary artifact
+        run: |
+          mkdir -p dist
+          cp build/avp dist/NakedAVP
+          chmod +x dist/NakedAVP
+          file dist/NakedAVP
+
+      - name: Build AppImage
+        run: |
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
+          cp build/avp AppDir/usr/bin/NakedAVP
+
+          cat > AppDir/usr/share/applications/nakedavp.desktop <<'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=NakedAVP
+          Exec=NakedAVP
+          Icon=nakedavp
+          Categories=Game;
+          Terminal=false
+          EOF
+
+          cat > AppDir/usr/share/icons/hicolor/scalable/apps/nakedavp.svg <<'EOF'
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+            <rect width="256" height="256" rx="24" fill="#111"/>
+            <circle cx="128" cy="128" r="92" fill="#2a2a2a" stroke="#bfbfbf" stroke-width="8"/>
+            <text x="128" y="146" text-anchor="middle" font-family="sans-serif" font-size="42" font-weight="bold" fill="#e6e6e6">AVP</text>
+          </svg>
+          EOF
+
+          wget -q             https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage             -O linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+
+          APPIMAGE_EXTRACT_AND_RUN=1             ./linuxdeploy-x86_64.AppImage             --appdir AppDir             --executable AppDir/usr/bin/NakedAVP             --desktop-file AppDir/usr/share/applications/nakedavp.desktop             --icon-file AppDir/usr/share/icons/hicolor/scalable/apps/nakedavp.svg             --output appimage
+
+          mkdir -p dist
+          APPIMAGE_PATH="$(find . -maxdepth 1 -type f -name '*.AppImage' -print -quit)"
+          test -n "${APPIMAGE_PATH}"
+          mv "${APPIMAGE_PATH}" dist/NakedAVP-x86_64.AppImage
+          chmod +x dist/NakedAVP-x86_64.AppImage
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: NakedAVP-linux-ubuntu-${{ matrix.ubuntu_version }}-x86_64
+          if-no-files-found: error
+          path: |
+            dist/NakedAVP
+            dist/NakedAVP-x86_64.AppImage

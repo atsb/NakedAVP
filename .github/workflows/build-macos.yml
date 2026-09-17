@@ -1,4 +1,4 @@
-name: MacOS build
+name: macOS build
 
 on:
   workflow_dispatch:
@@ -18,33 +18,119 @@ env:
 
 jobs:
   build:
-    # macos-latest is currently macos-15-arm64
-    name: macOS ${{ matrix.os_version }}
+    name: macOS ${{ matrix.os_version }}-${{ matrix.arch }}
     runs-on: macos-${{ matrix.os_version }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os_version: '15', arch: 'arm64' }  # macos-15 is Apple silicon (arm64)
+          - { os_version: '15', arch: 'arm64' }
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - name: Install dependencies
-      run: brew install sdl3
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install sdl3 ffmpeg pkg-config
 
-    - name: Configure CMake
-      run: |
-        cmake --version
-        cmake -S . -B build/ -Wdev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_OSX_ARCHITECTURES=${{matrix.arch}}
+      - name: Configure CMake
+        run: |
+          cmake --version
+          export PKG_CONFIG_PATH="$(brew --prefix ffmpeg)/lib/pkgconfig:${PKG_CONFIG_PATH}"
+          cmake -S . -B build             -Wdev             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}             -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}
 
-    - name: Build ${{env.BUILD_TYPE}}
-      run: cmake --build . --config ${{env.BUILD_TYPE}} -- -j4
-      working-directory: ${{github.workspace}}/build
+      - name: Build ${{ env.BUILD_TYPE }}
+        run: cmake --build . --config ${{ env.BUILD_TYPE }} -- -j4
+        working-directory: ${{ github.workspace }}/build
 
-    - uses: actions/upload-artifact@v6
-      with:
-        name: avp-osx-${{ matrix.os_version }}-${{matrix.arch}}.zip
-        if-no-files-found: 'error'
-        path: |
-          build/*
+      - name: Prepare macOS application bundle
+        run: |
+          APP="$PWD/dist/NakedAVP.app"
+          mkdir -p "$APP/Contents/MacOS"
+          mkdir -p "$APP/Contents/Frameworks"
+
+          cp build/avp "$APP/Contents/MacOS/NakedAVP"
+
+          cat > "$APP/Contents/Info.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>NakedAVP</string>
+            <key>CFBundleIdentifier</key>
+            <string>org.nakedavp.NakedAVP</string>
+            <key>CFBundleName</key>
+            <string>NakedAVP</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleVersion</key>
+            <string>1</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1</string>
+          </dict>
+          </plist>
+          EOF
+
+          BREW_PREFIX="$(brew --prefix)"
+          export BREW_PREFIX
+          python3 - <<'PY'
+          import os
+          import shutil
+          import subprocess
+          from pathlib import Path
+
+          app = Path(os.environ["PWD"]) / "dist" / "NakedAVP.app"
+          exe = app / "Contents" / "MacOS" / "NakedAVP"
+          frameworks = app / "Contents" / "Frameworks"
+          brew = Path(os.environ["BREW_PREFIX"])
+
+          queue = [exe]
+          copied = set()
+
+          while queue:
+              current = queue.pop()
+              output = subprocess.check_output(["otool", "-L", str(current)], text=True)
+              for line in output.splitlines()[1:]:
+                  dep = line.strip().split(" ", 1)[0]
+                  dep_path = Path(dep)
+                  if not dep.startswith("/opt/homebrew/") and not dep.startswith("/usr/local/"):
+                      continue
+                  if not dep_path.exists():
+                      continue
+                  target = frameworks / dep_path.name
+                  if dep_path.name not in copied:
+                      shutil.copy2(dep_path, target)
+                      copied.add(dep_path.name)
+                      subprocess.run(
+                          ["install_name_tool", "-id", f"@rpath/{target.name}", str(target)],
+                          check=True,
+                      )
+                      queue.append(target)
+
+          for binary in [exe, *frameworks.glob("*.dylib")]:
+              output = subprocess.check_output(["otool", "-L", str(binary)], text=True)
+              for line in output.splitlines()[1:]:
+                  dep = line.strip().split(" ", 1)[0]
+                  dep_name = Path(dep).name
+                  if dep_name not in copied:
+                      continue
+                  replacement = (
+                      f"@executable_path/../Frameworks/{dep_name}"
+                      if binary == exe
+                      else f"@loader_path/{dep_name}"
+                  )
+                  subprocess.run(
+                      ["install_name_tool", "-change", dep, replacement, str(binary)],
+                      check=False,
+                  )
+
+          subprocess.run(["codesign", "--force", "--deep", "--sign", "-", str(app)], check=True)
+          PY
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: NakedAVP-macos-${{ matrix.os_version }}-${{ matrix.arch }}
+          if-no-files-found: error
+          path: dist/NakedAVP.app

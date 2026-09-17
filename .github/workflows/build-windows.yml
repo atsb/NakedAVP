@@ -1,0 +1,106 @@
+name: Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: Windows UCRT64 x86_64
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-sdl3
+            mingw-w64-ucrt-x86_64-ffmpeg
+
+      - name: Configure CMake
+        run: |
+          gcc --version
+          cmake --version
+          pkg-config --modversion libavformat libavcodec libavutil libswscale libswresample
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DSDL3DIR=/ucrt64 -DCMAKE_PREFIX_PATH=/ucrt64
+
+      - name: Build ${{ env.BUILD_TYPE }}
+        run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 4
+
+      - name: Collect runtime DLLs
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          cp build/avp.exe dist/NakedAVP.exe
+
+          for pass in $(seq 1 20); do
+            changed=0
+            while IFS= read -r dll; do
+              [ -f "$dll" ] || continue
+              case "$dll" in
+                /ucrt64/bin/*.dll)
+                  name="$(basename "$dll")"
+                  if [ ! -f "dist/$name" ]; then
+                    cp "$dll" "dist/$name"
+                    changed=1
+                  fi
+                  ;;
+              esac
+            done < <(
+              find dist -maxdepth 1 -type f \( -name '*.exe' -o -name '*.dll' \) -print0 |
+                xargs -0 -n1 ldd 2>/dev/null |
+                awk '/=> \/ucrt64\/bin\/.+\.dll/ {print $3}'
+            )
+
+            [ "$changed" -eq 0 ] && break
+          done
+
+          test -f dist/SDL3.dll
+          ls dist/libav*.dll
+          ldd dist/NakedAVP.exe
+
+          cat > dist/README-Windows.txt <<'EOF'
+          NakedAVP Windows x86_64 package
+
+          Run NakedAVP.exe from the directory containing this file.
+
+          Game data is not included. Supply the required Aliens versus Predator Gold data separately.
+          EOF
+
+      - name: Create Windows release ZIP
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:GITHUB_WORKSPACE "NakedAVP-windows-x86_64.zip"
+          if (Test-Path $zip) {
+            Remove-Item $zip -Force
+          }
+          Compress-Archive -Path "${env:GITHUB_WORKSPACE}\dist\*" -DestinationPath $zip -CompressionLevel Optimal
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: NakedAVP-windows-x86_64
+          if-no-files-found: error
+          path: NakedAVP-windows-x86_64.zip
