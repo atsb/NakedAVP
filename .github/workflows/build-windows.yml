@@ -59,7 +59,8 @@ jobs:
             -A x64 `
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DVCPKG_TARGET_TRIPLET=${{ env.VCPKG_DEFAULT_TRIPLET }}
+            -DVCPKG_TARGET_TRIPLET=${{ env.VCPKG_DEFAULT_TRIPLET }} `
+            -DCMAKE_EXE_LINKER_FLAGS="/DEFAULTLIB:Shlwapi.lib /DEFAULTLIB:Winmm.lib"
 
       - name: Build ${{ env.BUILD_TYPE }}
         shell: pwsh
