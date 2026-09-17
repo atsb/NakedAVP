@@ -15,6 +15,7 @@
 
 
 extern void D3D_RenderHUDString(char *stringPtr,int x,int y,int colour);
+extern void D3D_RenderMenuSmallString(char *stringPtr,int x,int y,int colour);
 
 extern "C"
 {
@@ -136,6 +137,24 @@ static void UnloadMenuFont(void)
 {
 	IndexedFont :: UnloadFont( IntroFont_Light );
 }
+static int MenuTextScaleFixed(void)
+{
+	switch (MenuTextScale)
+	{
+		case 1: return (5 * 65536) / 4;
+		case 2: return (3 * 65536) / 2;
+		default: return 65536;
+	}
+}
+
+static int ScaledSmallMenuTextWidth(char *textPtr)
+{
+	int width = 0;
+	while (*textPtr)
+		width += AAFontWidths[(unsigned char)*textPtr++];
+	return (width * MenuTextScaleFixed()) >> 16;
+}
+
 extern int LengthOfMenuText(char *textPtr)
 {
 	IndexedFont* pFont = IndexedFont :: GetFont(IntroFont_Light);
@@ -269,27 +288,13 @@ extern int RenderSmallMenuText(char *textPtr, int x, int y, int alpha, enum AVPM
 		}
 		case AVPMENUFORMAT_RIGHTJUSTIFIED:
 		{
-			int length = 0;
-			char *ptr = textPtr;
-
-			while(*ptr)
-			{
-				length+=AAFontWidths[*ptr++];
-			}
-
+			int length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length;
 			break;
 		}
 		case AVPMENUFORMAT_CENTREJUSTIFIED:
 		{
-			int length = 0;
-			char *ptr = textPtr;
-
-			while(*ptr)
-			{
-				length+=AAFontWidths[*ptr++];
-			}
-
+			int length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length/2;
 			break;
 		}
@@ -313,27 +318,13 @@ extern int RenderSmallMenuText_Coloured(char *textPtr, int x, int y, int alpha, 
 		}
 		case AVPMENUFORMAT_RIGHTJUSTIFIED:
 		{
-			int length = 0;
-			char *ptr = textPtr;
-
-			while(*ptr)
-			{
-				length+=AAFontWidths[*ptr++];
-			}
-
+			int length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length;
 			break;
 		}
 		case AVPMENUFORMAT_CENTREJUSTIFIED:
 		{
-			int length = 0;
-			char *ptr = textPtr;
-
-			while(*ptr)
-			{
-				length+=AAFontWidths[*ptr++];
-			}
-
+			int length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length/2;
 			break;
 		}
@@ -358,27 +349,13 @@ extern int Hardware_RenderSmallMenuText(char *textPtr, int x, int y, int alpha, 
 		}
 		case AVPMENUFORMAT_RIGHTJUSTIFIED:
 		{
-			int length = 0;
-			char *ptr = textPtr;
-
-			while(*ptr)
-			{
-				length+=AAFontWidths[*ptr++];
-			}
-
+			int length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length;
 			break;
 		}
 		case AVPMENUFORMAT_CENTREJUSTIFIED:
 		{
-			int length = 0;
-			char *ptr = textPtr;
-
-			while(*ptr)
-			{
-				length+=AAFontWidths[*ptr++];
-			}
-
+			int length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length/2;
 			break;
 		}	
@@ -390,9 +367,9 @@ extern int Hardware_RenderSmallMenuText(char *textPtr, int x, int y, int alpha, 
 		unsigned int colour = alpha>>8;
 		if (colour>255) colour = 255;
 		colour = (colour<<24)+0xffffff;
-		D3D_RenderHUDString(textPtr,x,y,colour);
+		D3D_RenderMenuSmallString(textPtr,x,y,colour);
 	}
-	return x;
+	return x + ScaledSmallMenuTextWidth(textPtr);
 }
 
 extern int Hardware_RenderSmallMenuText_Coloured(char *textPtr, int x, int y, int alpha, enum AVPMENUFORMAT_ID format, int red, int green, int blue)
@@ -408,27 +385,13 @@ extern int Hardware_RenderSmallMenuText_Coloured(char *textPtr, int x, int y, in
 		}
 		case AVPMENUFORMAT_RIGHTJUSTIFIED:
 		{
-			int length = 0;
-			char *ptr = textPtr;
-
-			while(*ptr)
-			{
-				length+=AAFontWidths[*ptr++];
-			}
-
+			int length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length;
 			break;
 		}
 		case AVPMENUFORMAT_CENTREJUSTIFIED:
 		{
-			int length = 0;
-			char *ptr = textPtr;
-
-			while(*ptr)
-			{
-				length+=AAFontWidths[*ptr++];
-			}
-
+			int length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length/2;
 			break;
 		}	
@@ -443,9 +406,9 @@ extern int Hardware_RenderSmallMenuText_Coloured(char *textPtr, int x, int y, in
 		colour += MUL_FIXED(red,255)<<16;
 		colour += MUL_FIXED(green,255)<<8;
 		colour += MUL_FIXED(blue,255);
-		D3D_RenderHUDString(textPtr,x,y,colour);
+		D3D_RenderMenuSmallString(textPtr,x,y,colour);
 	}
-	return x;
+	return x + ScaledSmallMenuTextWidth(textPtr);
 }
 
 extern void Hardware_RenderKeyConfigRectangle(int alpha)

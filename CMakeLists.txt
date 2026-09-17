@@ -1,7 +1,6 @@
 # Aliens vs Predator - https://github.com/atsb/NakedAVP
 CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
 
-# be specific on C++ standard being used
 SET(CMAKE_CXX_STANDARD 11)
 
 # default to Release
@@ -13,16 +12,46 @@ ENDIF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 
 PROJECT(avp)
 
+FIND_PACKAGE(Threads REQUIRED)
+
 # required dependencies
 INCLUDE(FindOpenGLES2.cmake)
 INCLUDE(FindSDL3.cmake)
 INCLUDE(FindOpenGL)
-INCLUDE(FindOpenAL)
+
+# FMV playback
+FIND_PACKAGE(PkgConfig QUIET)
+IF(PkgConfig_FOUND)
+  PKG_CHECK_MODULES(FFMPEG QUIET IMPORTED_TARGET
+      libavformat libavcodec libavutil libswscale libswresample)
+ENDIF(PkgConfig_FOUND)
+
+IF(TARGET PkgConfig::FFMPEG)
+  SET(AVP_FFMPEG_TARGET PkgConfig::FFMPEG)
+ELSE()
+  FIND_PATH(FFMPEG_INCLUDE_DIR NAMES libavformat/avformat.h)
+  FIND_LIBRARY(FFMPEG_AVFORMAT NAMES avformat avformat-61 avformat-60 avformat-59)
+  FIND_LIBRARY(FFMPEG_AVCODEC NAMES avcodec avcodec-61 avcodec-60 avcodec-59)
+  FIND_LIBRARY(FFMPEG_AVUTIL NAMES avutil avutil-59 avutil-58 avutil-57)
+  FIND_LIBRARY(FFMPEG_SWSCALE NAMES swscale swscale-8 swscale-7 swscale-6)
+  FIND_LIBRARY(FFMPEG_SWRESAMPLE NAMES swresample swresample-5 swresample-4)
+
+  IF(NOT FFMPEG_INCLUDE_DIR OR NOT FFMPEG_AVFORMAT OR NOT FFMPEG_AVCODEC OR
+     NOT FFMPEG_AVUTIL OR NOT FFMPEG_SWSCALE OR NOT FFMPEG_SWRESAMPLE)
+    MESSAGE(FATAL_ERROR "FFmpeg development libraries not found. Install libavformat, libavcodec, libavutil, libswscale and libswresample, or set CMAKE_PREFIX_PATH to an FFmpeg installation.")
+  ENDIF()
+
+  ADD_LIBRARY(avp_ffmpeg INTERFACE)
+  TARGET_INCLUDE_DIRECTORIES(avp_ffmpeg INTERFACE ${FFMPEG_INCLUDE_DIR})
+  TARGET_LINK_LIBRARIES(avp_ffmpeg INTERFACE
+      ${FFMPEG_AVFORMAT} ${FFMPEG_AVCODEC} ${FFMPEG_AVUTIL}
+      ${FFMPEG_SWSCALE} ${FFMPEG_SWRESAMPLE})
+  SET(AVP_FFMPEG_TARGET avp_ffmpeg)
+ENDIF()
 
 IF(NOT SDL3_FOUND)
-    MESSAGE(FATAL_ERROR "SDL 3.0 was requested but CMake couldn't find it.")
+    MESSAGE(FATAL_ERROR "SDL 3 was requested but CMake couldn't find it.")
 ENDIF(NOT SDL3_FOUND)
-    MESSAGE(WARNING "SDL 3.0 support is STABLE.")
 
 # Use Desktop OpenGL if it is available, else try OpenGL ES.
 IF(NOT OPENGL_TYPE)
@@ -64,15 +93,11 @@ IF(OPENGL_TYPE STREQUAL "OPENGLES2")
   ENDIF(NOT OPENGLES_FOUND)
 ENDIF(OPENGL_TYPE STREQUAL "OPENGLES2")
 
-# OpenAL
-IF(NOT OPENAL_FOUND)
-    MESSAGE(FATAL_ERROR "OpenAL is required but CMake couldn't find it.")
-ENDIF(NOT OPENAL_FOUND)
-
 # required source files
 LIST(APPEND source src/files.c)
 LIST(APPEND source src/winapi.c)
 LIST(APPEND source src/stubs.c)
+LIST(APPEND source src/render_workers.c)
 LIST(APPEND source src/version.c)
 LIST(APPEND source src/mathline.c)
 LIST(APPEND source src/net.c)
@@ -287,7 +312,8 @@ LIST(APPEND source src/win95/zsp.cpp)
 LIST(APPEND source src/opengl.c)
 LIST(APPEND source src/oglfunc.c)
 LIST(APPEND source src/fmv.c)
-LIST(APPEND source src/openal.c)
+LIST(APPEND source src/movie.c)
+LIST(APPEND source src/sdl_audio.c)
 LIST(APPEND source src/cdplayer.c)
 LIST(APPEND source src/menus.c)
 LIST(APPEND source src/main.c)
@@ -321,9 +347,10 @@ IF(OPENGL_TYPE STREQUAL "OPENGLES2")
   INCLUDE_DIRECTORIES(${EGL_INCLUDE_DIR})
 ENDIF(OPENGL_TYPE STREQUAL "OPENGLES2")
 
-INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
 
 TARGET_LINK_LIBRARIES(avp ${SDL3_LIBRARY})
+TARGET_LINK_LIBRARIES(avp Threads::Threads)
+TARGET_LINK_LIBRARIES(avp ${AVP_FFMPEG_TARGET})
 
 IF(OPENGL_TYPE STREQUAL "OPENGL")
   TARGET_LINK_LIBRARIES(avp ${OPENGL_gl_LIBRARY})
@@ -334,4 +361,3 @@ IF(OPENGL_TYPE STREQUAL "OPENGLES2")
   TARGET_LINK_LIBRARIES(avp ${EGL_LIBRARIES})
 ENDIF(OPENGL_TYPE STREQUAL "OPENGLES2")
 
-TARGET_LINK_LIBRARIES(avp ${OPENAL_LIBRARY})

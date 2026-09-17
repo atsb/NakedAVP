@@ -4,6 +4,7 @@
 #include <ctype.h>
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_gamepad.h>
 #include "oglfunc.h"
 
 #if !defined(_MSC_VER)
@@ -84,10 +85,10 @@ SDL_GLContext context;
 SDL_Surface *surface;
 
 SDL_Joystick *joy;
+SDL_Gamepad *gamepad;
 JOYINFOEX JoystickData;
 JOYCAPS JoystickCaps;
 
-// Window configuration and state
 static int WindowWidth;
 static int WindowHeight;
 static int ViewportWidth;
@@ -112,10 +113,9 @@ static int WantResolutionChange = 1;
 static int WantMouseGrab = 1;
 #endif
 
-// Additional configuration
 int WantSound = 1;
 static int WantCDRom = 0;
-static int WantJoystick = 0;
+static int WantJoystick = 1;
 
 static GLuint FullscreenTexture;
 static GLsizei FullscreenTextureWidth;
@@ -145,67 +145,76 @@ void DirectReadMouse()
 
 void ReadJoysticks()
 {
-	int axes, balls, hats;
-	Uint8 hat;
-	
-	JoystickData.dwXpos = 0;
-	JoystickData.dwYpos = 0;
-	JoystickData.dwRpos = 0;
-	JoystickData.dwUpos = 0;
-	JoystickData.dwVpos = 0;
-	JoystickData.dwPOV = (DWORD) -1;	
-	
-	if (joy == NULL || !GotJoystick) {
-		return;
-	}
+    JoystickData.dwXpos = 32768;
+    JoystickData.dwYpos = 32768;
+    JoystickData.dwRpos = 32768;
+    JoystickData.dwUpos = 32768;
+    JoystickData.dwVpos = 32768;
+    JoystickData.dwPOV = (DWORD)-1;
 
-	SDL_UpdateJoysticks();
-	
-	axes = SDL_GetNumJoystickAxes(joy);
-	balls = SDL_GetNumJoystickBalls(joy);
-	hats = SDL_GetNumJoystickHats(joy);
-	
-	if (axes > 0) {
-		JoystickData.dwXpos = SDL_GetJoystickAxis(joy, 0) + 32768;
-	}
-	if (axes > 1) {
-		JoystickData.dwYpos = SDL_GetJoystickAxis(joy, 1) + 32768;
-	}
-	
-	if (hats > 0) {
-		hat = SDL_GetJoystickHat(joy, 0);
-		
-		switch (hat) {
-			default:
-			case SDL_HAT_CENTERED:
-				JoystickData.dwPOV = (DWORD) -1;
-				break;
-			case SDL_HAT_UP:
-				JoystickData.dwPOV = 0;
-				break;
-			case SDL_HAT_RIGHT:
-				JoystickData.dwPOV = 9000;
-				break;
-			case SDL_HAT_DOWN:
-				JoystickData.dwPOV = 18000;
-				break;
-			case SDL_HAT_LEFT:
-				JoystickData.dwPOV = 27000;
-				break;
-			case SDL_HAT_RIGHTUP:
-				JoystickData.dwPOV = 4500;
-				break;
-			case SDL_HAT_RIGHTDOWN:
-				JoystickData.dwPOV = 13500;
-				break;
-			case SDL_HAT_LEFTUP:
-				JoystickData.dwPOV = 31500;
-				break;
-			case SDL_HAT_LEFTDOWN:
-				JoystickData.dwPOV = 22500;
-				break;
-		}
-	}
+    if (!GotJoystick)
+        return;
+
+    if (gamepad) {
+        Sint16 x, y, rx, ry;
+        int pov = 0;
+
+        SDL_UpdateGamepads();
+        x = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX);
+        y = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
+        rx = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTX);
+        ry = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTY);
+
+        JoystickData.dwXpos = (DWORD)((int)x + 32768);
+        JoystickData.dwYpos = (DWORD)((int)y + 32768);
+
+        JoystickData.dwRpos = (DWORD)((int)rx + 32768);
+        JoystickData.dwUpos = (DWORD)((int)ry + 32768);
+
+        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP)) pov |= 1;
+        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT)) pov |= 2;
+        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN)) pov |= 4;
+        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT)) pov |= 8;
+
+        switch (pov) {
+            case 1:  JoystickData.dwPOV = 0; break;
+            case 3:  JoystickData.dwPOV = 4500; break;
+            case 2:  JoystickData.dwPOV = 9000; break;
+            case 6:  JoystickData.dwPOV = 13500; break;
+            case 4:  JoystickData.dwPOV = 18000; break;
+            case 12: JoystickData.dwPOV = 22500; break;
+            case 8:  JoystickData.dwPOV = 27000; break;
+            case 9:  JoystickData.dwPOV = 31500; break;
+            default: break;
+        }
+        return;
+    }
+
+    if (joy) {
+        int axes = SDL_GetNumJoystickAxes(joy);
+        int hats = SDL_GetNumJoystickHats(joy);
+        Uint8 hat;
+
+        SDL_UpdateJoysticks();
+        if (axes > 0) JoystickData.dwXpos = (DWORD)(SDL_GetJoystickAxis(joy, 0) + 32768);
+        if (axes > 1) JoystickData.dwYpos = (DWORD)(SDL_GetJoystickAxis(joy, 1) + 32768);
+        if (axes > 2) JoystickData.dwRpos = (DWORD)(SDL_GetJoystickAxis(joy, 2) + 32768);
+
+        if (hats > 0) {
+            hat = SDL_GetJoystickHat(joy, 0);
+            switch (hat) {
+                case SDL_HAT_UP:        JoystickData.dwPOV = 0; break;
+                case SDL_HAT_RIGHTUP:   JoystickData.dwPOV = 4500; break;
+                case SDL_HAT_RIGHT:     JoystickData.dwPOV = 9000; break;
+                case SDL_HAT_RIGHTDOWN: JoystickData.dwPOV = 13500; break;
+                case SDL_HAT_DOWN:      JoystickData.dwPOV = 18000; break;
+                case SDL_HAT_LEFTDOWN:  JoystickData.dwPOV = 22500; break;
+                case SDL_HAT_LEFT:      JoystickData.dwPOV = 27000; break;
+                case SDL_HAT_LEFTUP:    JoystickData.dwPOV = 31500; break;
+                default: break;
+            }
+        }
+    }
 }
 
 /* ** */
@@ -333,6 +342,7 @@ VideoModeStruct VideoModeList[] = {
 };
 
 int CurrentVideoMode;
+static int AppliedVideoMode = -1;
 const int TotalVideoModes = sizeof(VideoModeList) / sizeof(VideoModeList[0]);
 
 void LoadDeviceAndVideoModePreferences()
@@ -382,6 +392,54 @@ void LoadDeviceAndVideoModePreferences()
 	}
 }
 
+static void SetWindowSize(int PhysicalWidth, int PhysicalHeight, int VirtualWidth, int VirtualHeight);
+
+static void ApplySelectedVideoMode(void)
+{
+	int width = VideoModeList[CurrentVideoMode].w;
+	int height = VideoModeList[CurrentVideoMode].h;
+	Uint64 flags;
+
+	if (window == NULL)
+		return;
+
+	flags = SDL_GetWindowFlags(window);
+	if ((flags & SDL_WINDOW_FULLSCREEN) != 0)
+	{
+		SDL_DisplayID display = SDL_GetDisplayForWindow(window);
+		SDL_DisplayMode mode;
+
+		if (display != 0 && SDL_GetClosestFullscreenDisplayMode(display, width, height, 0.0f, false, &mode))
+		{
+			if (!SDL_SetWindowFullscreenMode(window, &mode))
+				fprintf(stderr, "SDL_SetWindowFullscreenMode failed: %s\n", SDL_GetError());
+		}
+	}
+	else
+	{
+		if (!SDL_SetWindowSize(window, width, height))
+			fprintf(stderr, "SDL_SetWindowSize failed: %s\n", SDL_GetError());
+	}
+
+	SDL_SyncWindow(window);
+	SDL_GetWindowSize(window, &WindowWidth, &WindowHeight);
+	ViewportWidth = WindowWidth;
+	ViewportHeight = WindowHeight;
+	ScreenDescriptorBlock.SDB_Width = WindowWidth;
+	ScreenDescriptorBlock.SDB_Height = WindowHeight;
+	ScreenDescriptorBlock.SDB_CentreX = WindowWidth / 2;
+	ScreenDescriptorBlock.SDB_CentreY = WindowHeight / 2;
+	ScreenDescriptorBlock.SDB_ProjX = WindowWidth / 2;
+	ScreenDescriptorBlock.SDB_ProjY = WindowHeight / 2;
+	ScreenDescriptorBlock.SDB_ClipLeft = 0;
+	ScreenDescriptorBlock.SDB_ClipRight = WindowWidth;
+	ScreenDescriptorBlock.SDB_ClipUp = 0;
+	ScreenDescriptorBlock.SDB_ClipDown = WindowHeight;
+	AppliedVideoMode = CurrentVideoMode;
+	if (pglViewport != NULL)
+		pglViewport(0, 0, WindowWidth, WindowHeight);
+}
+
 void SaveDeviceAndVideoModePreferences()
 {
 	FILE *fp;
@@ -391,6 +449,9 @@ void SaveDeviceAndVideoModePreferences()
 		fprintf(fp, "%d\n", CurrentVideoMode);
 		fclose(fp);
 	}
+
+	if (CurrentVideoMode != AppliedVideoMode)
+		ApplySelectedVideoMode();
 }
 
 void PreviousVideoMode2()
@@ -511,28 +572,38 @@ int InitSDL()
 	LoadDeviceAndVideoModePreferences();
 
 	if (WantJoystick) {
-		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-			
-		joy = SDL_OpenJoystick(0);
-		if (joy) {
-			GotJoystick = 1;
-			
-			JoystickCaps.wCaps = 0; /* no rudder... ? */
-			
-			JoystickData.dwXpos = 0;
-			JoystickData.dwYpos = 0;
-			JoystickData.dwRpos = 0;
-			JoystickData.dwUpos = 0;
-			JoystickData.dwVpos = 0;
-			JoystickData.dwPOV = (DWORD) -1;
+		if (SDL_InitSubSystem(SDL_INIT_GAMEPAD | SDL_INIT_JOYSTICK)) {
+			int gamepad_count = 0;
+			SDL_JoystickID *gamepads = SDL_GetGamepads(&gamepad_count);
+			if (gamepads && gamepad_count > 0) {
+				gamepad = SDL_OpenGamepad(gamepads[0]);
+				if (gamepad) {
+					joy = SDL_GetGamepadJoystick(gamepad);
+					GotJoystick = 1;
+					fprintf(stderr, "Gamepad: %s\n", SDL_GetGamepadName(gamepad));
+				}
+			}
+			SDL_free(gamepads);
+
+			/* Fall back to the raw SDL joystick API for older/unmapped devices. */
+			if (!gamepad) {
+				int joystick_count = 0;
+				SDL_JoystickID *joysticks = SDL_GetJoysticks(&joystick_count);
+				if (joysticks && joystick_count > 0) {
+					joy = SDL_OpenJoystick(joysticks[0]);
+					if (joy) GotJoystick = 1;
+				}
+				SDL_free(joysticks);
+			}
+
+			JoystickCaps.wCaps = gamepad ? JOYCAPS_HASR : 0;
+			ReadJoysticks();
 		}
 	}
-	
+
 	Uint32 rmask, gmask, bmask, amask;
 	
-	// pre-create the software surface in OpenGL RGBA order
-	// menus.c assumes RGB565; possible to support both?
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		#if SDL_BYTEORDER == SDL_BIG_ENDIAN
     rmask = 0xff000000;
     gmask = 0x00ff0000;
     bmask = 0x0000ff00;
@@ -663,8 +734,7 @@ static int SetOGLVideoMode(int Width, int Height)
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #endif
-		// These should be configurable video options.
-		// If user requests 8bpp, try that, else fall back to 5.
+				// If user requests 8bpp, try that, else fall back to 5.
 		// Same with depth.  Try 32, 24, 16.
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
@@ -672,9 +742,17 @@ static int SetOGLVideoMode(int Width, int Height)
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-		// These should be configurable video options.
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+		if (OpenGLMultisampleSamples > 0)
+		{
+			static const int samples[] = { 0, 2, 4 };
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples[OpenGLMultisampleSamples <= 2 ? OpenGLMultisampleSamples : 2]);
+		}
+		else
+		{
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+		}
 
 		window = SDL_CreateWindow("Aliens vs Predator",
 								  WindowWidth,
@@ -692,13 +770,14 @@ static int SetOGLVideoMode(int Width, int Height)
 		}
 		SDL_GL_MakeCurrent(window, context);
 
-		// These should be configurable video options.
-		SDL_GL_SetSwapInterval(1);
+		if (!SDL_GL_SetSwapInterval(-1))
+			SDL_GL_SetSwapInterval(1);
 
 		load_ogl_functions(1);
 
 		SDL_GetWindowSize(window, &Width, &Height);
 		pglViewport(0, 0, Width, Height);
+		AppliedVideoMode = CurrentVideoMode;
 
 		// create fullscreen window texture
 		pglGenTextures(1, &FullscreenTexture);
@@ -754,8 +833,13 @@ int InitialiseWindowsSystem(HANDLE hInstance, int nCmdShow, int WinInitMode)
 
 int ExitWindowsSystem()
 {
-	if (joy != NULL) {
+	if (gamepad != NULL) {
+		SDL_CloseGamepad(gamepad);
+		gamepad = NULL;
+		joy = NULL;
+	} else if (joy != NULL) {
 		SDL_CloseJoystick(joy);
+		joy = NULL;
 	}
 
 	if (FullscreenTexture != 0) {
@@ -1158,6 +1242,24 @@ void CheckForWindowsMessages()
 			case SDL_EVENT_WINDOW_FOCUS_LOST:
 					// disable mouse grab?
 				break;
+			case SDL_EVENT_GAMEPAD_ADDED:
+				if (WantJoystick && !gamepad) {
+					gamepad = SDL_OpenGamepad(event.gdevice.which);
+					if (gamepad) {
+						joy = SDL_GetGamepadJoystick(gamepad);
+						GotJoystick = 1;
+						JoystickCaps.wCaps = JOYCAPS_HASR;
+					}
+				}
+				break;
+			case SDL_EVENT_GAMEPAD_REMOVED:
+				if (gamepad && SDL_GetGamepadID(gamepad) == event.gdevice.which) {
+					SDL_CloseGamepad(gamepad);
+					gamepad = NULL;
+					joy = NULL;
+					GotJoystick = 0;
+				}
+				break;
 			case SDL_EVENT_WINDOW_RESIZED:
 					//printf("test, %d,%d\n", event.window.data1, event.window.data2);
 					WindowWidth = event.window.data1;
@@ -1206,16 +1308,28 @@ void CheckForWindowsMessages()
 	}
 
 	if (GotJoystick) {
-		float numbuttons;
 		int x;
-		
-		SDL_UpdateJoysticks();
-		
-		numbuttons = SDL_GetNumJoystickButtons(joy);
-		if (numbuttons > 16) numbuttons = 16;
-		
-		for (x = 0; x < numbuttons; x++) {
-			if (SDL_GetJoystickButton(joy, x)) {
+		ReadJoysticks();
+
+		for (x = 0; x < 16; x++) {
+			bool pressed = false;
+			if (gamepad) {
+				static const SDL_GamepadButton buttons[16] = {
+					SDL_GAMEPAD_BUTTON_SOUTH, SDL_GAMEPAD_BUTTON_EAST,
+					SDL_GAMEPAD_BUTTON_WEST, SDL_GAMEPAD_BUTTON_NORTH,
+					SDL_GAMEPAD_BUTTON_BACK, SDL_GAMEPAD_BUTTON_START,
+					SDL_GAMEPAD_BUTTON_LEFT_STICK, SDL_GAMEPAD_BUTTON_RIGHT_STICK,
+					SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
+					SDL_GAMEPAD_BUTTON_DPAD_UP, SDL_GAMEPAD_BUTTON_DPAD_DOWN,
+					SDL_GAMEPAD_BUTTON_DPAD_LEFT, SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
+					SDL_GAMEPAD_BUTTON_MISC1, SDL_GAMEPAD_BUTTON_TOUCHPAD
+				};
+				pressed = SDL_GetGamepadButton(gamepad, buttons[x]);
+			} else if (joy && x < SDL_GetNumJoystickButtons(joy)) {
+				pressed = SDL_GetJoystickButton(joy, x);
+			}
+
+			if (pressed) {
 				GotAnyKey = 1;
 				if (!KeyboardInput[KEY_JOYSTICK_BUTTON_1+x]) {
 					KeyboardInput[KEY_JOYSTICK_BUTTON_1+x] = 1;
@@ -1223,7 +1337,7 @@ void CheckForWindowsMessages()
 				}
 			} else {
 				KeyboardInput[KEY_JOYSTICK_BUTTON_1+x] = 0;
-			}	
+			}
 		}
 	}
 

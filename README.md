@@ -1,12 +1,6 @@
 Aliens vs Predator  http://icculus.org/avp/
 ------------------------
 
-NOTE: Yes, NakedAVP is still undergoing development locally.  Be prepped for a 'HUGE' update coming soon.  I've been hard at work really getting the base utilities, code, inputs and most importantly, full FFMPEG/Smacker implementation (including the main menu).
-
-Currently, I'm running my local build via ASAN and hardening every aspect of the codebase (which is hugely time consuming).
-
-NakedAVP 1.3 will be the absolute 'definitive' edition :)
-
 Table of Contents:
 1. Introduction
 2. Compilation
@@ -30,12 +24,14 @@ http://community.ioquake.org/c/avp
 
 Please see LICENSE for copyright and licensing information.
 
-Previously missing features are still missing.  Multiplayer, movies, etc.
+Previously missing features are still missing. Multiplayer, etc.
+
+Full-motion video playback is supported when the original game movie files are present. Full-screen cinematics use Bink (`.bik`); the original in-game video screens use Smacker (`.smk`).
 
 Part 2: Compilation
 -------------------
 
-CMake, SDL 3, OpenAL and OpenGL support are required.
+CMake, SDL 3, OpenAL, OpenGL and FFmpeg development libraries are required. FFmpeg is used only for Bink (`.bik`) and Smacker (`.smk`) movie decoding; the game does not ship any proprietary movie files or Bink/Smacker SDK binaries.
 
 An example of how to use CMake to build the game:
 $ cd <avp-source-code>
@@ -43,6 +39,8 @@ $ mkdir build
 $ cd build
 $ cmake ..
 $ make
+
+FFmpeg development packages must provide libavformat, libavcodec, libavutil, libswscale and libswresample. FFmpeg 5.1 or newer is required. CMake prefers pkg-config but also supports normal include/library discovery. Use an LGPL-only FFmpeg build if required by your distribution/licensing policy.
 
 Please note that on Linux, only GCC is supported.
 

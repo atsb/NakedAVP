@@ -22,6 +22,27 @@
 
 char AAFontWidths[256];
 
+int MenuTextScale = 0;
+int TextureAnisotropyLevel = 2;
+int OpenGLMultisampleSamples = 2;
+
+static int MenuTextScaleFixed(void)
+{
+	switch (MenuTextScale)
+	{
+		case 1: return (5 * ONE_FIXED) / 4;
+		case 2: return (3 * ONE_FIXED) / 2;
+		default: return ONE_FIXED;
+	}
+}
+
+static int ScaledSmallMenuTextWidth(const char *textPtr)
+{
+	int width = 0;
+	while (textPtr && *textPtr) width += AAFontWidths[(unsigned char)*textPtr++];
+	return MUL_FIXED(width, MenuTextScaleFixed());
+}
+
 extern SDL_Surface *surface;
 extern SCREENDESCRIPTORBLOCK ScreenDescriptorBlock;
 
@@ -860,11 +881,76 @@ Determine area used by text , so we can draw it centrally
 	if(output_y) *output_y=sy;
 }
 
+static int RenderSmallMenuTextScaledSoftware(char *textPtr,int x,int y,int alpha,int red,int green,int blue)
+{
+	const int scale = MenuTextScaleFixed();
+	if (scale == ONE_FIXED)
+		return RenderSmallFontString(textPtr,x,y,alpha,red,green,blue);
+
+	int advance_scale = scale;
+	unsigned char *srcPtr;
+	unsigned short *destPtr;
+	AVPMENUGFX *gfxPtr = &AvPMenuGfxStorage[AVPMENUGFX_SMALL_FONT];
+	D3DTexture *image = gfxPtr->ImagePtr;
+	int alphaR = MUL_FIXED(alpha,red);
+	int alphaG = MUL_FIXED(alpha,green);
+	int alphaB = MUL_FIXED(alpha,blue);
+
+	if (SDL_MUSTLOCK(surface) && SDL_LockSurface(surface) < 0)
+		return x;
+
+	while (*textPtr)
+	{
+		unsigned char c = (unsigned char)*textPtr++;
+		if (c >= ' ')
+		{
+			int topLeftU = 1+((c-32)&15)*16;
+			int topLeftV = 1+((c-32)>>4)*16;
+			srcPtr = &image->buf[(topLeftU+topLeftV*image->w)*4];
+
+			for (int sy = 0; sy < HUD_FONT_HEIGHT; ++sy)
+			{
+				int scaled_y0 = y + MUL_FIXED(sy, scale);
+				int scaled_y1 = y + MUL_FIXED(sy+1, scale);
+				for (int py = scaled_y0; py < scaled_y1; ++py)
+				{
+					destPtr = (unsigned short *)(((unsigned char *)surface->pixels)+py*surface->pitch) + x;
+					for (int sx = 0; sx < HUD_FONT_WIDTH; ++sx)
+					{
+						unsigned char *pixel = srcPtr + (sy*image->w + sx) * 4;
+						if (pixel[0] || pixel[1] || pixel[2])
+						{
+							int scaled_x0 = MUL_FIXED(sx, scale);
+							int scaled_x1 = MUL_FIXED(sx+1, scale);
+							for (int px = scaled_x0; px < scaled_x1; ++px)
+							{
+								unsigned int destR = (*((unsigned short*)(destPtr+px)) & 0xF800)>>8;
+								unsigned int destG = (*((unsigned short*)(destPtr+px)) & 0x07E0)>>3;
+								unsigned int destB = (*((unsigned short*)(destPtr+px)) & 0x001F)<<3;
+								destR += MUL_FIXED(alphaR,pixel[0]);
+								destG += MUL_FIXED(alphaG,pixel[1]);
+								destB += MUL_FIXED(alphaB,pixel[2]);
+								if (destR > 255) destR = 255;
+								if (destG > 255) destG = 255;
+								if (destB > 255) destB = 255;
+								*((unsigned short*)(destPtr+px)) = ((destR>>3)<<11)|((destG>>2)<<5)|(destB>>3);
+							}
+						}
+					}
+				}
+			}
+		}
+		x += MUL_FIXED(AAFontWidths[c], advance_scale);
+	}
+
+	if (SDL_MUSTLOCK(surface)) SDL_UnlockSurface(surface);
+	return x;
+}
+
 int RenderSmallMenuText(char *textPtr, int x, int y, int alpha, enum AVPMENUFORMAT_ID format)
 {
 	int length;
-	char *ptr;
-	
+
 	switch(format) {
 		default:
 			GLOBALASSERT("UNKNOWN TEXT FORMAT"==0);
@@ -872,37 +958,24 @@ int RenderSmallMenuText(char *textPtr, int x, int y, int alpha, enum AVPMENUFORM
 		case AVPMENUFORMAT_LEFTJUSTIFIED:
 			break;
 		case AVPMENUFORMAT_RIGHTJUSTIFIED:
-			length = 0;
-			ptr = textPtr;
-			
-			while (*ptr) {
-				length+=AAFontWidths[(unsigned char) *ptr++];
-			}
-			
+			length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length;
 			break;
 		case AVPMENUFORMAT_CENTREJUSTIFIED:
-			length = 0;
-			ptr = textPtr;
-			
-			while (*ptr) {
-				length+=AAFontWidths[(unsigned char) *ptr++];
-			}
-			
+			length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length / 2;
 			break;
 	}
 	
 	LOCALASSERT(x>0);
 	
-	return RenderSmallFontString(textPtr,x,y,alpha,ONE_FIXED,ONE_FIXED,ONE_FIXED);
+	return RenderSmallMenuTextScaledSoftware(textPtr,x,y,alpha,ONE_FIXED,ONE_FIXED,ONE_FIXED);
 }
 
 int RenderSmallMenuText_Coloured(char *textPtr, int x, int y, int alpha, enum AVPMENUFORMAT_ID format, int red, int green, int blue)
 {
 	int length;
-	char *ptr;
-	
+
 	switch(format) {
 		default:
 			GLOBALASSERT("UNKNOWN TEXT FORMAT"==0);
@@ -910,30 +983,18 @@ int RenderSmallMenuText_Coloured(char *textPtr, int x, int y, int alpha, enum AV
 		case AVPMENUFORMAT_LEFTJUSTIFIED:
 			break;
 		case AVPMENUFORMAT_RIGHTJUSTIFIED:
-			length = 0;
-			ptr = textPtr;
-	
-			while (*ptr) {
-				length+=AAFontWidths[(unsigned char) *ptr++];
-			}
-			
+			length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length;
 			break;
 		case AVPMENUFORMAT_CENTREJUSTIFIED:
-			length = 0;
-			ptr = textPtr;
-			
-			while (*ptr) {
-				length+=AAFontWidths[(unsigned char) *ptr++];
-			}
-			
+			length = ScaledSmallMenuTextWidth(textPtr);
 			x -= length / 2;
 			break;
 	}
 	
 	LOCALASSERT(x>0);
 	
-	return RenderSmallFontString(textPtr,x,y,alpha,red,green,blue);			
+	return RenderSmallMenuTextScaledSoftware(textPtr,x,y,alpha,red,green,blue);			
 }
 
 static void CalculateWidthsOfAAFont()

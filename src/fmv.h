@@ -1,6 +1,8 @@
 #ifndef FMV_H
 #define FMV_H
 
+typedef struct AVPMovie AVPMovie;
+
 typedef struct
 {
 	IMAGEHEADER *ImagePtr;
@@ -19,6 +21,9 @@ typedef struct
 	// buffer used for opengl texture uploads
 	unsigned char* PalettedBuf;
 	unsigned char* RGBBuf;
+
+	/* FFmpeg-backed Smacker decoder used for in-world video screens. */
+	AVPMovie *Movie;
 	
 	int RedScale;
 	int GreenScale;

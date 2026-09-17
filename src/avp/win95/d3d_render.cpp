@@ -8750,6 +8750,54 @@ extern void D3D_RenderHUDNumber_Centred(unsigned int number,int x,int y,int colo
 }
 
 
+extern "C" int MenuTextScale;
+
+static int MenuTextScaleFixed(void)
+{
+	switch (MenuTextScale)
+	{
+		case 1: return (5 * 65536) / 4;
+		case 2: return (3 * 65536) / 2;
+		default: return 65536;
+	}
+}
+
+extern void D3D_RenderMenuSmallString(char *stringPtr,int x,int y,int colour)
+{
+	struct VertexTag quadVertices[4];
+	const int scale = MenuTextScaleFixed();
+
+	quadVertices[0].Y = y-MUL_FIXED(scale,1);
+	quadVertices[1].Y = y-MUL_FIXED(scale,1);
+	quadVertices[2].Y = y+MUL_FIXED(scale,HUD_FONT_HEIGHT+1);
+	quadVertices[3].Y = y+MUL_FIXED(scale,HUD_FONT_HEIGHT+1);
+
+	CheckFilteringModeIsCorrect(FILTERING_BILINEAR_OFF);
+	while (*stringPtr)
+	{
+		char c = *stringPtr++;
+		int topLeftU = 1+((c-32)&15)*16;
+		int topLeftV = 1+((c-32)>>4)*16;
+
+		quadVertices[0].U = topLeftU - 1;
+		quadVertices[0].V = topLeftV - 1;
+		quadVertices[1].U = topLeftU + HUD_FONT_WIDTH + 1;
+		quadVertices[1].V = topLeftV - 1;
+		quadVertices[2].U = topLeftU + HUD_FONT_WIDTH + 1;
+		quadVertices[2].V = topLeftV + HUD_FONT_HEIGHT + 1;
+		quadVertices[3].U = topLeftU - 1;
+		quadVertices[3].V = topLeftV + HUD_FONT_HEIGHT + 1;
+
+		quadVertices[0].X = x-MUL_FIXED(scale,1);
+		quadVertices[3].X = x-MUL_FIXED(scale,1);
+		quadVertices[1].X = x+MUL_FIXED(scale,HUD_FONT_WIDTH+1);
+		quadVertices[2].X = x+MUL_FIXED(scale,HUD_FONT_WIDTH+1);
+
+		D3D_HUDQuad_Output(AAFontImageNumber,quadVertices,colour);
+		x += MUL_FIXED(scale,AAFontWidths[(unsigned char)c]);
+	}
+}
+
 extern void D3D_RenderHUDString(char *stringPtr,int x,int y,int colour)
 {
 	struct VertexTag quadVertices[4];

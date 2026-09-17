@@ -35,6 +35,10 @@
 static char *local_dir;
 static char *global_dir;
 
+#ifndef _WIN32
+static char *resolve_case_insensitive_path(const char *base, const char *relative);
+#endif
+
 /*
 Sets the local and global directories used by the other functions.
 Local = ~/.dir, where config and user-installed files are kept.
@@ -161,6 +165,17 @@ FILE *OpenGameFile(const char *filename, int mode, int type)
 		if (fp != NULL) {
 			return fp;
 		}
+
+#ifndef _WIN32
+		{
+			char *resolved = resolve_case_insensitive_path(global_dir, filename);
+			if (resolved) {
+				fp = fopen(resolved, openmode);
+				free(resolved);
+				if (fp != NULL) return fp;
+			}
+		}
+#endif
 	}
 	
 	if (type != FILETYPE_PERM) {
@@ -180,6 +195,16 @@ FILE *OpenGameFile(const char *filename, int mode, int type)
 		
 		free(rfilename);
 		
+#ifndef _WIN32
+		{
+			char *resolved = resolve_case_insensitive_path(local_dir, filename);
+			if (resolved) {
+				fp = fopen(resolved, openmode);
+				free(resolved);
+				if (fp != NULL) return fp;
+			}
+		}
+#endif
 		return fp;
 	}
 	
@@ -589,35 +614,131 @@ static int try_game_directory(char *dir, char *file)
 /*
   Game-specific helper function.
  */
+#ifndef _WIN32
+/* Resolve a relative path one filesystem component at a time, ignoring case. */
+static char *resolve_case_insensitive_path(const char *base, const char *relative)
+{
+	char *resolved = NULL;
+	char *work = NULL;
+	const char *root = (base && *base) ? base : ".";
+	size_t cap, len;
+	const char *p;
+
+	cap = strlen(root) + strlen(relative) + 4;
+	resolved = (char *)malloc(cap);
+	if (!resolved) return NULL;
+	strcpy(resolved, root);
+	len = strlen(resolved);
+	if (len == 0) {
+		strcpy(resolved, ".");
+		len = 1;
+	}
+	if (resolved[len - 1] != '/') {
+		resolved[len++] = '/';
+		resolved[len] = 0;
+	}
+
+	work = strdup(relative);
+	if (!work) {
+		free(resolved);
+		return NULL;
+	}
+
+	for (p = work; *p;) {
+		char part[PATH_MAX];
+		size_t partlen = 0;
+		DIR *d;
+		struct dirent *entry;
+		char *chosen = NULL;
+
+		while (*p == '/') p++;
+		if (!*p) break;
+		while (p[partlen] && p[partlen] != '/') {
+			if (partlen + 1 >= sizeof(part)) {
+				free(work);
+				free(resolved);
+				return NULL;
+			}
+			part[partlen] = p[partlen];
+			partlen++;
+		}
+		part[partlen] = 0;
+		p += partlen;
+
+		d = opendir(resolved);
+		if (!d) {
+			free(work);
+			free(resolved);
+			return NULL;
+		}
+
+		while ((entry = readdir(d)) != NULL) {
+			if (strcasecmp(entry->d_name, part) == 0) {
+				chosen = strdup(entry->d_name);
+				break;
+			}
+		}
+		closedir(d);
+
+		if (!chosen) {
+			free(work);
+			free(resolved);
+			return NULL;
+		}
+
+		if (len + strlen(chosen) + 2 > cap) {
+			free(chosen);
+			free(work);
+			free(resolved);
+			return NULL;
+		}
+		strcpy(resolved + len, chosen);
+		len += strlen(chosen);
+		resolved[len++] = '/';
+		resolved[len] = 0;
+		free(chosen);
+	}
+
+	if (len > 1 && resolved[len - 1] == '/')
+		resolved[len - 1] = 0;
+
+	free(work);
+	return resolved;
+}
+
+static int try_game_directory_case_insensitive(const char *dir, const char *file)
+{
+	char *resolved = resolve_case_insensitive_path(dir, file);
+	int ok = 0;
+	if (resolved) {
+		ok = access(resolved, R_OK) == 0;
+		free(resolved);
+	}
+	return ok;
+}
+#endif
+
 static int check_game_directory(char *dir)
 {
 	if (!dir || !*dir) {
 		return 0;
 	}
 	
-	if (!try_game_directory(dir, "/avp_huds")) {
-		return 0;
-	}
-	
-	if (!try_game_directory(dir, "/avp_huds/alien.rif")) {
-		return 0;
-	}
-	
-	if (!try_game_directory(dir, "/avp_rifs")) {
-		return 0;
-	}
-	
-	if (!try_game_directory(dir, "/avp_rifs/temple.rif")) {
-		return 0;
-	}
-	
-	if (!try_game_directory(dir, "/fastfile")) {
-		return 0;
-	}
-	
-	if (!try_game_directory(dir, "/fastfile/ffinfo.txt")) {
-		return 0;
-	}
+#ifdef _WIN32
+	if (!try_game_directory(dir, "\\avp_huds")) { return 0; }
+	if (!try_game_directory(dir, "\\avp_huds\\alien.rif")) { return 0; }
+	if (!try_game_directory(dir, "\\avp_rifs")) { return 0; }
+	if (!try_game_directory(dir, "\\avp_rifs\\temple.rif")) { return 0; }
+	if (!try_game_directory(dir, "\\fastfile")) { return 0; }
+	if (!try_game_directory(dir, "\\fastfile\\ffinfo.txt")) { return 0; }
+#else
+	if (!try_game_directory_case_insensitive(dir, "avp_huds")) { return 0; }
+	if (!try_game_directory_case_insensitive(dir, "avp_huds/alien.rif")) { return 0; }
+	if (!try_game_directory_case_insensitive(dir, "avp_rifs")) { return 0; }
+	if (!try_game_directory_case_insensitive(dir, "avp_rifs/temple.rif")) { return 0; }
+	if (!try_game_directory_case_insensitive(dir, "fastfile")) { return 0; }
+	if (!try_game_directory_case_insensitive(dir, "fastfile/ffinfo.txt")) { return 0; }
+#endif
 	
 	return 1;
 }

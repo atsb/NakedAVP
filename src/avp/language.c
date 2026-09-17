@@ -119,6 +119,19 @@ char *GetTextString(enum TEXTSTRING_ID stringID)
 			case TEXTSTRING_MAINMENU_EXITGAME_HELP_NEW: return "Exit the game.";
 			case TEXTSTRING_MAINMENU_CREDITS_NEW: return "Credits";
 			case TEXTSTRING_MAINMENU_CREDITS_HELP_NEW: return "View the credits.";
+			case TEXTSTRING_MENU_TEXT_SCALE_NEW: return "Menu Text Scale";
+			case TEXTSTRING_MENU_TEXT_SCALE_100_NEW: return "100%";
+			case TEXTSTRING_MENU_TEXT_SCALE_125_NEW: return "125%";
+			case TEXTSTRING_MENU_TEXT_SCALE_150_NEW: return "150%";
+			case TEXTSTRING_ANISOTROPIC_FILTERING_NEW: return "Anisotropic Filtering";
+			case TEXTSTRING_ANISOTROPIC_FILTERING_OFF_NEW: return "Off";
+			case TEXTSTRING_ANISOTROPIC_FILTERING_2X_NEW: return "2x";
+			case TEXTSTRING_ANISOTROPIC_FILTERING_4X_NEW: return "4x";
+			case TEXTSTRING_ANISOTROPIC_FILTERING_8X_NEW: return "8x";
+			case TEXTSTRING_ANTIALIASING_NEW: return "Anti-Aliasing";
+			case TEXTSTRING_ANTIALIASING_OFF_NEW: return "Off";
+			case TEXTSTRING_ANTIALIASING_2X_NEW: return "2x";
+			case TEXTSTRING_ANTIALIASING_4X_NEW: return "4x";
 			default: break;
 		}
 	}

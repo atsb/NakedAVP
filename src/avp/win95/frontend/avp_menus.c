@@ -1207,7 +1207,7 @@ static void RenderMenu(void)
 	}
 	else // in game menus
 	{
-		y = (ScreenDescriptorBlock.SDB_Height - AvPMenus.MenuHeight)/2;
+		y = (480 - AvPMenus.MenuHeight)/2;
 	}
 
 	for (e = 0; e<AvPMenus.NumberOfElementsInMenu; e++, elementPtr++)
@@ -1487,7 +1487,7 @@ static void RenderKeyConfigurationMenu(void)
 	AVPMENU_ELEMENT *elementPtr = AvPMenus.MenuElements;//AvPMenus.CurrentlySelectedElement];
 	int centrePosition;
 	int i;
-	int centreY = ScreenDescriptorBlock.SDB_Height/2+25;
+	int centreY;
 	int y;
 	
 	if (AvPMenus.MenusState == MENUSSTATE_MAINMENUS)
@@ -1520,6 +1520,7 @@ static void RenderKeyConfigurationMenu(void)
 		
 		Hardware_RenderKeyConfigRectangle(b);
 	}		       
+	centreY = (AvPMenus.MenusState == MENUSSTATE_INGAMEMENUS) ? 265 : ScreenDescriptorBlock.SDB_Height/2+25;
 	y = centreY-160;
 	for (i = 0; i<2; i++, elementPtr++)
 	{
@@ -3025,7 +3026,15 @@ static void InteractWithMenuElement(enum AVPMENU_ELEMENT_INTERACTION_ID interact
 			if (interactionID == AVPMENU_ELEMENT_INTERACTION_SELECT)
 			{
 				SaveDeviceAndVideoModePreferences();
-				SetupNewMenu(elementPtr->b.MenuToGoTo);
+				SaveUserProfile(UserProfilePtr);
+				if (AvPMenus.MenusState == MENUSSTATE_INGAMEMENUS)
+				{
+					SetupNewMenu(AVPMENU_INGAMEAVOPTIONS);
+				}
+				else
+				{
+					SetupNewMenu(elementPtr->b.MenuToGoTo);
+				}
 			}
 			break;
 		}
@@ -3680,16 +3689,23 @@ static void RenderMenuElement(AVPMENU_ELEMENT *elementPtr, int e, int y)
 		{
 			unsigned char *primaryKey = ((unsigned char*)&PlayerInputPrimaryConfig)+e-2;
 			unsigned char *secondaryKey = ((unsigned char*)&PlayerInputSecondaryConfig)+e-2;
+			const int menuCentreX = MENU_CENTREX;
+			const int menuLeftXEdge = (AvPMenus.MenusState == MENUSSTATE_INGAMEMENUS) ?
+				MENU_CENTREX + (int)(((long long)(30 - MENU_CENTREX) * 480) / ScreenDescriptorBlock.SDB_Height) :
+				MENU_LEFTXEDGE;
+			const int menuRightXEdge = (AvPMenus.MenusState == MENUSSTATE_INGAMEMENUS) ?
+				MENU_CENTREX + (int)(((long long)(MENU_RIGHTXEDGE - MENU_CENTREX) * 480) / ScreenDescriptorBlock.SDB_Height) :
+				MENU_RIGHTXEDGE;
 			if (e==AvPMenus.CurrentlySelectedElement)
 			{
 				int x,g;
 				if (KeyConfigSelectionColumn)
 				{
-					x = MENU_RIGHTXEDGE;
+					x = menuRightXEdge;
 				}
 				else
 				{
-					x = MENU_CENTREX;
+					x = menuCentreX;
 				}
 				if (AvPMenus.UserChangingKeyConfig)
 				{
@@ -3714,11 +3730,11 @@ static void RenderMenuElement(AVPMENU_ELEMENT *elementPtr, int e, int y)
 				int b = GetSin(CloakingPhase&4095);
 				if (AvPMenus.ChangingPrimaryConfig)
 				{
-					RenderText("_",MENU_CENTREX,y,MUL_FIXED(b,b),AVPMENUFORMAT_RIGHTJUSTIFIED);
+					RenderText("_",menuCentreX,y,MUL_FIXED(b,b),AVPMENUFORMAT_RIGHTJUSTIFIED);
 					RenderText
 					(
 						GetDescriptionOfKey(*secondaryKey),
-						MENU_RIGHTXEDGE,
+						menuRightXEdge,
 						y,
 						elementPtr->Brightness,
 						AVPMENUFORMAT_RIGHTJUSTIFIED
@@ -3730,12 +3746,12 @@ static void RenderMenuElement(AVPMENU_ELEMENT *elementPtr, int e, int y)
 					RenderText
 					(
 						GetDescriptionOfKey(*primaryKey),
-						MENU_CENTREX,
+						menuCentreX,
 						y,
 						elementPtr->Brightness,
 						AVPMENUFORMAT_RIGHTJUSTIFIED
 					);
-					RenderText("_",MENU_RIGHTXEDGE,y,MUL_FIXED(b,b),AVPMENUFORMAT_RIGHTJUSTIFIED);
+					RenderText("_",menuRightXEdge,y,MUL_FIXED(b,b),AVPMENUFORMAT_RIGHTJUSTIFIED);
 
 				}
 
@@ -3747,7 +3763,7 @@ static void RenderMenuElement(AVPMENU_ELEMENT *elementPtr, int e, int y)
 					RenderText_Coloured
 					(
 						GetDescriptionOfKey(*primaryKey),
-						MENU_CENTREX,
+						menuCentreX,
 						y,
 						ONE_FIXED,
 						AVPMENUFORMAT_RIGHTJUSTIFIED,
@@ -3761,7 +3777,7 @@ static void RenderMenuElement(AVPMENU_ELEMENT *elementPtr, int e, int y)
 					RenderText
 					(
 						GetDescriptionOfKey(*primaryKey),
-						MENU_CENTREX,
+						menuCentreX,
 						y,
 						elementPtr->Brightness,
 						AVPMENUFORMAT_RIGHTJUSTIFIED
@@ -3772,7 +3788,7 @@ static void RenderMenuElement(AVPMENU_ELEMENT *elementPtr, int e, int y)
 					RenderText_Coloured
 					(
 						GetDescriptionOfKey(*secondaryKey),
-						MENU_RIGHTXEDGE,
+						menuRightXEdge,
 						y,
 						ONE_FIXED,
 						AVPMENUFORMAT_RIGHTJUSTIFIED,
@@ -3786,7 +3802,7 @@ static void RenderMenuElement(AVPMENU_ELEMENT *elementPtr, int e, int y)
 					RenderText
 					(
 						GetDescriptionOfKey(*secondaryKey),
-						MENU_RIGHTXEDGE,
+						menuRightXEdge,
 						y,
 						elementPtr->Brightness,
 						AVPMENUFORMAT_RIGHTJUSTIFIED
@@ -3797,7 +3813,7 @@ static void RenderMenuElement(AVPMENU_ELEMENT *elementPtr, int e, int y)
 			RenderText
 			(
 				GetTextString(elementPtr->a.TextDescription),
-				MENU_LEFTXEDGE,
+				menuLeftXEdge,
 				y,
 				elementPtr->Brightness,
 				AVPMENUFORMAT_LEFTJUSTIFIED
@@ -4780,25 +4796,14 @@ extern void DrawMainMenusBackdrop(void)
 	}
 	else
 	{
-		extern unsigned char *ScreenBuffer;
-		unsigned int *screenPtr = (unsigned int*)ScreenBuffer;
-		int i;	  
-
-		i = ScreenDescriptorBlock.SDB_Width * 60 /2;
-		do
+		extern int PresentMenuBackgroundBink(void);
+		/* Rebuild the software composition from the current movie frame every
+		 * menu frame. This prevents old menu glyphs from becoming part of the
+		 * next movie frame when the decoder is waiting for its next PTS. */
+		if (!PresentMenuBackgroundBink())
 		{
-			*screenPtr++=0; 
+			DrawAvPMenuGfx(AVPMENUGFX_BACKDROP,0,0,ONE_FIXED+1,AVPMENUFORMAT_LEFTJUSTIFIED);
 		}
-		while(--i);
-
-		screenPtr+=ScreenDescriptorBlock.SDB_Width * 360/2;
-
-		i = ScreenDescriptorBlock.SDB_Width * 60 /2;
-		do
-		{
-			*screenPtr++=0; 
-		}
-		while(--i);
 	}
 
 
@@ -5334,20 +5339,34 @@ void RenderBriefingText(int centreY, int brightness)
 		}
 	}
 
-	x = (ScreenDescriptorBlock.SDB_Width-lengthOfLongestLine)/2;
-	y = centreY - 3*HUD_FONT_HEIGHT;
-	for(i=0; i<5; i++)
+	if (AvPMenus.MenusState != MENUSSTATE_MAINMENUS)
 	{
-		if (AvPMenus.MenusState != MENUSSTATE_MAINMENUS)
+		int userScale;
+		switch (MenuTextScale)
 		{
-			Hardware_RenderSmallMenuText(BriefingTextString[i], x, y, brightness, AVPMENUFORMAT_LEFTJUSTIFIED/*,MENU_CENTREY-60-100,MENU_CENTREY-60+180*/);
+			case 1: userScale = (5 * ONE_FIXED) / 4; break;
+			case 2: userScale = (3 * ONE_FIXED) / 2; break;
+			default: userScale = ONE_FIXED; break;
 		}
-		else
+		x = ScreenDescriptorBlock.SDB_Width/2;
+		y = 240 - 3*MUL_FIXED(HUD_FONT_HEIGHT,userScale);
+		for(i=0; i<5; i++)
+		{
+			Hardware_RenderSmallMenuText(BriefingTextString[i], x, y, brightness, AVPMENUFORMAT_CENTREJUSTIFIED);
+			if (i) y+=MUL_FIXED(HUD_FONT_HEIGHT,userScale);
+			else y+=2*MUL_FIXED(HUD_FONT_HEIGHT,userScale);
+		}
+	}
+	else
+	{
+		x = (ScreenDescriptorBlock.SDB_Width-lengthOfLongestLine)/2;
+		y = centreY - 3*HUD_FONT_HEIGHT;
+		for(i=0; i<5; i++)
 		{
 			RenderSmallMenuText(BriefingTextString[i], x, y, brightness, AVPMENUFORMAT_LEFTJUSTIFIED);
+			if (i) y+=HUD_FONT_HEIGHT;
+			else y+=HUD_FONT_HEIGHT*2;
 		}
-		if (i) y+=HUD_FONT_HEIGHT;
-		else y+=HUD_FONT_HEIGHT*2;
 	}
 }
 

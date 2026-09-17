@@ -15,6 +15,7 @@ extern "C"
 #include "avp_menus.h"
 extern SCREENDESCRIPTORBLOCK ScreenDescriptorBlock;
 extern int DebouncedGotAnyKey;
+extern int GotAnyKey;
 
 extern void MinimalNetCollectMessages(void);
 extern void NetSendMessages(void);
@@ -227,11 +228,14 @@ void Game_Has_Loaded(void)
 	LoadingInProgress = 0;
 
 	int f = 65536;
+	int inputWasReleased = 0;
 	ResetFrameCounter();
 	do
 	{
 		CheckForWindowsMessages();
 		ReadUserInput();
+
+		if (!GotAnyKey) inputWasReleased = 1;
 	
 		ColourFillBackBufferQuad
 		(
@@ -284,7 +288,7 @@ void Game_Has_Loaded(void)
 		}
 		
 	}
-	while(!DebouncedGotAnyKey);
+	while(!inputWasReleased || !DebouncedGotAnyKey);
 
 	FadingGameInAfterLoading=ONE_FIXED;
 

@@ -247,7 +247,13 @@ static void SetDefaultProfileOptions(AVP_USER_PROFILE *profilePtr)
 	MoviesAreActive = 1;
 	IntroOutroMoviesAreActive = 1; 
 	AutoWeaponChangeOn = TRUE;
-	
+	MenuTextScale = 0;
+	TextureAnisotropyLevel = 2;
+	OpenGLMultisampleSamples = 2;
+	profilePtr->Padding[0] = 1;
+	profilePtr->Padding[1] = 3;
+	profilePtr->Padding[2] = 3;
+
 	strcpy(MP_PlayerName, "Player");
 
 	SetToDefaultDetailLevels();
@@ -268,6 +274,12 @@ static void SetDefaultProfileOptions(AVP_USER_PROFILE *profilePtr)
 extern void GetSettingsFromUserProfile(void)
 {
 	RequestedGammaSetting = UserProfilePtr->GammaSetting;
+	MenuTextScale = (UserProfilePtr->Padding[0] >= 1 && UserProfilePtr->Padding[0] <= 3)
+		? (UserProfilePtr->Padding[0] - 1) : 0;
+	TextureAnisotropyLevel = (UserProfilePtr->Padding[1] >= 1 && UserProfilePtr->Padding[1] <= 4)
+		? (UserProfilePtr->Padding[1] - 1) : 2;
+	OpenGLMultisampleSamples = (UserProfilePtr->Padding[2] >= 1 && UserProfilePtr->Padding[2] <= 3)
+		? (UserProfilePtr->Padding[2] - 1) : 2;
 
 	MarineInputPrimaryConfig = 		UserProfilePtr->MarineInputPrimaryConfig;
 	MarineInputSecondaryConfig = 	UserProfilePtr->MarineInputSecondaryConfig;
@@ -292,6 +304,9 @@ extern void GetSettingsFromUserProfile(void)
 extern void SaveSettingsToUserProfile(AVP_USER_PROFILE *profilePtr)
 {
 	profilePtr->GammaSetting = RequestedGammaSetting;
+	profilePtr->Padding[0] = (char)(MenuTextScale + 1);
+	profilePtr->Padding[1] = (char)(TextureAnisotropyLevel + 1);
+	profilePtr->Padding[2] = (char)(OpenGLMultisampleSamples + 1);
 
 	profilePtr->MarineInputPrimaryConfig =		MarineInputPrimaryConfig;
 	profilePtr->MarineInputSecondaryConfig =	MarineInputSecondaryConfig;

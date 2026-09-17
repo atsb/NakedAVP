@@ -39,6 +39,16 @@
 
 #define SAVE_GAME_ON 1 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern int MenuTextScale;
+extern int TextureAnisotropyLevel;
+extern int OpenGLMultisampleSamples;
+#ifdef __cplusplus
+}
+#endif
+
 #include "avp_menugfx.hpp"
 #include "language.h"
 
