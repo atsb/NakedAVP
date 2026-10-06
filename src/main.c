@@ -114,7 +114,7 @@ static int WantMouseGrab = 1;
 #endif
 
 int WantSound = 1;
-static int WantCDRom = 0;
+static int WantCDRom = 1;
 static int WantJoystick = 1;
 
 static GLuint FullscreenTexture;
@@ -1525,7 +1525,7 @@ static const char *usage_string =
 "      [-f | --fullscreen]     Run the game fullscreen\n"
 "      [-w | --windowed]       Run the game in a window\n"
 "      [-s | --nosound]        Do not access the soundcard\n"
-"      [-c | --nocdrom]        Do not access the CD-ROM\n"
+"      [-c | --nocdrom]        Disable CD background music\n"
 "      [-j | --nojoy]          Do not access the joystick\n"
 "      [-p | --datapath] [x]   Look at [x] for game files\n"
 "      [-g | --withgl] [x]     Use [x] instead of /usr/lib/libGL.so.1 for OpenGL\n"
