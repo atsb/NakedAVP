@@ -4,6 +4,9 @@
 #include "kshape.h"
 
 void InitOpenGL();
+void OpenGL_InvalidateTextureObjects(void);
+void OpenGL_RestoreTextureObjects(void);
+void OpenGL_PostProcessResetState(void);
 void ThisFramesRenderingHasBegun();
 void ThisFramesRenderingHasFinished();
 void D3D_SkyPolygon_Output(POLYHEADER *inputPolyPtr, RENDERVERTEX *renderVerticesPtr);

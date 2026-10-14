@@ -23,6 +23,10 @@ typedef struct DIRECTDRAWSURFACE
 	int hasChroma;
 
 	int filter;
+
+	unsigned char *restoreBuf;
+	struct DIRECTDRAWSURFACE *registryNext;
+	int registeredTexture;
 } DIRECTDRAWSURFACE;
 
 typedef DIRECTDRAWSURFACE * LPDIRECTDRAWSURFACE;

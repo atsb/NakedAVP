@@ -33,6 +33,8 @@ extern int MoviesAreActive;
 extern int IntroOutroMoviesAreActive;
 extern char MP_PlayerName[];
 extern int AutoWeaponChangeOn;
+extern int AVP_BloomEnabled;
+extern int AVP_DynamicLightingEnabled;
 
 
 List<AVP_USER_PROFILE *> UserProfilesList;
@@ -280,6 +282,20 @@ extern void GetSettingsFromUserProfile(void)
 		? (UserProfilePtr->Padding[1] - 1) : 2;
 	OpenGLMultisampleSamples = (UserProfilePtr->Padding[2] >= 1 && UserProfilePtr->Padding[2] <= 3)
 		? (UserProfilePtr->Padding[2] - 1) : 2;
+	/* The BL1/BL0 marker makes this backward-compatible with older profiles. */
+	if (UserProfilePtr->Padding[3] == 'B' && UserProfilePtr->Padding[4] == 'L')
+	{
+		if (UserProfilePtr->Padding[5] == '1') AVP_BloomEnabled = 1;
+		else if (UserProfilePtr->Padding[5] == '0') AVP_BloomEnabled = 0;
+	}
+	/* Missing markers are old profiles: keep dynamic lighting enabled by default. */
+	AVP_DynamicLightingEnabled = 1;
+	/* DL1/DL0 records the dynamic-lighting preference in unused profile padding. */
+	if (UserProfilePtr->Padding[6] == 'D' && UserProfilePtr->Padding[7] == 'L')
+	{
+		if (UserProfilePtr->Padding[8] == '1') AVP_DynamicLightingEnabled = 1;
+		else if (UserProfilePtr->Padding[8] == '0') AVP_DynamicLightingEnabled = 0;
+	}
 
 	MarineInputPrimaryConfig = 		UserProfilePtr->MarineInputPrimaryConfig;
 	MarineInputSecondaryConfig = 	UserProfilePtr->MarineInputSecondaryConfig;
@@ -307,6 +323,12 @@ extern void SaveSettingsToUserProfile(AVP_USER_PROFILE *profilePtr)
 	profilePtr->Padding[0] = (char)(MenuTextScale + 1);
 	profilePtr->Padding[1] = (char)(TextureAnisotropyLevel + 1);
 	profilePtr->Padding[2] = (char)(OpenGLMultisampleSamples + 1);
+	profilePtr->Padding[3] = 'B';
+	profilePtr->Padding[4] = 'L';
+	profilePtr->Padding[5] = AVP_BloomEnabled ? '1' : '0';
+	profilePtr->Padding[6] = 'D';
+	profilePtr->Padding[7] = 'L';
+	profilePtr->Padding[8] = AVP_DynamicLightingEnabled ? '1' : '0';
 
 	profilePtr->MarineInputPrimaryConfig =		MarineInputPrimaryConfig;
 	profilePtr->MarineInputSecondaryConfig =	MarineInputSecondaryConfig;

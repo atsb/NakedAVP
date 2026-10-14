@@ -1,6 +1,33 @@
 # Aliens vs Predator - https://github.com/atsb/NakedAVP
 CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
 
+# On Windows, automatically use the conventional vcpkg installation at C:\vcpkg.
+# This must be set before project() so CMake initializes the vcpkg toolchain.
+# An explicitly supplied toolchain always takes precedence.
+IF(CMAKE_HOST_WIN32 AND NOT CMAKE_TOOLCHAIN_FILE)
+    SET(_AVP_VCPKG_ROOT "C:/vcpkg")
+    IF(DEFINED ENV{VCPKG_ROOT} AND EXISTS "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+        SET(_AVP_VCPKG_ROOT "$ENV{VCPKG_ROOT}")
+    ENDIF()
+
+    SET(_AVP_VCPKG_TOOLCHAIN "${_AVP_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+    IF(EXISTS "${_AVP_VCPKG_TOOLCHAIN}")
+        SET(CMAKE_TOOLCHAIN_FILE "${_AVP_VCPKG_TOOLCHAIN}" CACHE FILEPATH "vcpkg toolchain file" FORCE)
+        IF(NOT VCPKG_TARGET_TRIPLET)
+            IF(CMAKE_GENERATOR_PLATFORM MATCHES "^(Win32|x86)$")
+                SET(VCPKG_TARGET_TRIPLET "x86-windows" CACHE STRING "vcpkg target triplet" FORCE)
+            ELSEIF(CMAKE_GENERATOR_PLATFORM MATCHES "^(ARM64|arm64)$")
+                SET(VCPKG_TARGET_TRIPLET "arm64-windows" CACHE STRING "vcpkg target triplet" FORCE)
+            ELSE()
+                SET(VCPKG_TARGET_TRIPLET "x64-windows" CACHE STRING "vcpkg target triplet" FORCE)
+            ENDIF()
+        ENDIF()
+        MESSAGE(STATUS "NakedAVP: using vcpkg at ${_AVP_VCPKG_ROOT} (${VCPKG_TARGET_TRIPLET})")
+    ELSE()
+        MESSAGE(STATUS "NakedAVP: vcpkg not found at ${_AVP_VCPKG_ROOT}; using normal CMake dependency discovery")
+    ENDIF()
+ENDIF()
+
 SET(CMAKE_CXX_STANDARD 11)
 
 # default to Release
@@ -19,39 +46,85 @@ ENDIF()
 
 FIND_PACKAGE(Threads REQUIRED)
 
-# required dependencies
-INCLUDE(FindOpenGLES2.cmake)
-INCLUDE(FindSDL3.cmake)
-INCLUDE(FindOpenGL)
-
-# FMV playback
-FIND_PACKAGE(PkgConfig QUIET)
-IF(PkgConfig_FOUND)
-  PKG_CHECK_MODULES(FFMPEG QUIET IMPORTED_TARGET
-      libavformat libavcodec libavutil libswscale libswresample)
-ENDIF(PkgConfig_FOUND)
-
-IF(TARGET PkgConfig::FFMPEG)
-  SET(AVP_FFMPEG_TARGET PkgConfig::FFMPEG)
+# Prefer SDL3's CMake package (provided by vcpkg). Keep the legacy FindSDL3
+# module as a fallback so existing non-vcpkg builds continue to work.
+IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/FindOpenGLES2.cmake")
+    INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/FindOpenGLES2.cmake")
 ELSE()
-  FIND_PATH(FFMPEG_INCLUDE_DIR NAMES libavformat/avformat.h)
-  FIND_LIBRARY(FFMPEG_AVFORMAT NAMES avformat avformat-61 avformat-60 avformat-59)
-  FIND_LIBRARY(FFMPEG_AVCODEC NAMES avcodec avcodec-61 avcodec-60 avcodec-59)
-  FIND_LIBRARY(FFMPEG_AVUTIL NAMES avutil avutil-59 avutil-58 avutil-57)
-  FIND_LIBRARY(FFMPEG_SWSCALE NAMES swscale swscale-8 swscale-7 swscale-6)
-  FIND_LIBRARY(FFMPEG_SWRESAMPLE NAMES swresample swresample-5 swresample-4)
+    FIND_PATH(OPENGLES_INCLUDE_DIR NAMES GLES2/gl2.h)
+    FIND_PATH(EGL_INCLUDE_DIR NAMES EGL/egl.h)
+    FIND_LIBRARY(OPENGLES_gl_LIBRARY NAMES GLESv2)
+    FIND_LIBRARY(EGL_LIBRARIES NAMES EGL)
+    IF(OPENGLES_INCLUDE_DIR AND EGL_INCLUDE_DIR AND OPENGLES_gl_LIBRARY AND EGL_LIBRARIES)
+        SET(OPENGLES_FOUND TRUE)
+    ENDIF()
+ENDIF()
+INCLUDE(FindOpenGL)
+FIND_PACKAGE(SDL3 CONFIG QUIET)
+IF(TARGET SDL3::SDL3)
+    SET(AVP_SDL3_TARGET SDL3::SDL3)
+    SET(AVP_SDL3_CONFIG_TARGET TRUE)
+    SET(SDL3_FOUND TRUE)
+ELSEIF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/FindSDL3.cmake")
+    INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/FindSDL3.cmake")
+    IF(SDL3_FOUND)
+        SET(AVP_SDL3_TARGET "${SDL3_LIBRARY}")
+    ENDIF()
+ELSE()
+    FIND_PATH(SDL3_INCLUDE NAMES SDL3/SDL.h)
+    FIND_LIBRARY(SDL3_LIBRARY NAMES SDL3)
+    IF(SDL3_INCLUDE AND SDL3_LIBRARY)
+        SET(SDL3_FOUND TRUE)
+        SET(AVP_SDL3_TARGET "${SDL3_LIBRARY}")
+    ENDIF()
+ENDIF()
 
-  IF(NOT FFMPEG_INCLUDE_DIR OR NOT FFMPEG_AVFORMAT OR NOT FFMPEG_AVCODEC OR
-     NOT FFMPEG_AVUTIL OR NOT FFMPEG_SWSCALE OR NOT FFMPEG_SWRESAMPLE)
-    MESSAGE(FATAL_ERROR "FFmpeg development libraries not found. Install libavformat, libavcodec, libavutil, libswscale and libswresample, or set CMAKE_PREFIX_PATH to an FFmpeg installation.")
+# FMV playback. vcpkg ships an FFmpeg CMake package with dependency-aware
+# link variables; prefer it on Windows before falling back to pkg-config or
+# manual library discovery.
+SET(AVP_FFMPEG_TARGET "")
+FIND_PACKAGE(FFMPEG QUIET)
+IF(FFMPEG_FOUND AND FFMPEG_LIBRARIES)
+  ADD_LIBRARY(avp_ffmpeg INTERFACE)
+  IF(FFMPEG_INCLUDE_DIRS)
+    TARGET_INCLUDE_DIRECTORIES(avp_ffmpeg INTERFACE ${FFMPEG_INCLUDE_DIRS})
+  ELSEIF(FFMPEG_INCLUDE_DIR)
+    TARGET_INCLUDE_DIRECTORIES(avp_ffmpeg INTERFACE ${FFMPEG_INCLUDE_DIR})
+  ENDIF()
+  IF(FFMPEG_LIBRARY_DIRS)
+    TARGET_LINK_DIRECTORIES(avp_ffmpeg INTERFACE ${FFMPEG_LIBRARY_DIRS})
+  ENDIF()
+  TARGET_LINK_LIBRARIES(avp_ffmpeg INTERFACE ${FFMPEG_LIBRARIES})
+  SET(AVP_FFMPEG_TARGET avp_ffmpeg)
+ELSE()
+  FIND_PACKAGE(PkgConfig QUIET)
+  IF(PkgConfig_FOUND)
+    PKG_CHECK_MODULES(FFMPEG QUIET IMPORTED_TARGET
+        libavformat libavcodec libavutil libswscale libswresample)
   ENDIF()
 
-  ADD_LIBRARY(avp_ffmpeg INTERFACE)
-  TARGET_INCLUDE_DIRECTORIES(avp_ffmpeg INTERFACE ${FFMPEG_INCLUDE_DIR})
-  TARGET_LINK_LIBRARIES(avp_ffmpeg INTERFACE
-      ${FFMPEG_AVFORMAT} ${FFMPEG_AVCODEC} ${FFMPEG_AVUTIL}
-      ${FFMPEG_SWSCALE} ${FFMPEG_SWRESAMPLE})
-  SET(AVP_FFMPEG_TARGET avp_ffmpeg)
+  IF(TARGET PkgConfig::FFMPEG)
+    SET(AVP_FFMPEG_TARGET PkgConfig::FFMPEG)
+  ELSE()
+    FIND_PATH(FFMPEG_INCLUDE_DIR NAMES libavformat/avformat.h)
+    FIND_LIBRARY(FFMPEG_AVFORMAT NAMES avformat avformat-62 avformat-61 avformat-60 avformat-59)
+    FIND_LIBRARY(FFMPEG_AVCODEC NAMES avcodec avcodec-62 avcodec-61 avcodec-60 avcodec-59)
+    FIND_LIBRARY(FFMPEG_AVUTIL NAMES avutil avutil-60 avutil-59 avutil-58 avutil-57)
+    FIND_LIBRARY(FFMPEG_SWSCALE NAMES swscale swscale-9 swscale-8 swscale-7 swscale-6)
+    FIND_LIBRARY(FFMPEG_SWRESAMPLE NAMES swresample swresample-6 swresample-5 swresample-4)
+
+    IF(NOT FFMPEG_INCLUDE_DIR OR NOT FFMPEG_AVFORMAT OR NOT FFMPEG_AVCODEC OR
+       NOT FFMPEG_AVUTIL OR NOT FFMPEG_SWSCALE OR NOT FFMPEG_SWRESAMPLE)
+      MESSAGE(FATAL_ERROR "FFmpeg development libraries not found. On Windows, run build_windows.bat to install SDL3 and FFmpeg through C:/vcpkg. Otherwise install the FFmpeg development libraries or set CMAKE_PREFIX_PATH to an FFmpeg installation.")
+    ENDIF()
+
+    ADD_LIBRARY(avp_ffmpeg_manual INTERFACE)
+    TARGET_INCLUDE_DIRECTORIES(avp_ffmpeg_manual INTERFACE ${FFMPEG_INCLUDE_DIR})
+    TARGET_LINK_LIBRARIES(avp_ffmpeg_manual INTERFACE
+        ${FFMPEG_AVFORMAT} ${FFMPEG_AVCODEC} ${FFMPEG_AVUTIL}
+        ${FFMPEG_SWSCALE} ${FFMPEG_SWRESAMPLE})
+    SET(AVP_FFMPEG_TARGET avp_ffmpeg_manual)
+  ENDIF()
 ENDIF()
 
 IF(NOT SDL3_FOUND)
@@ -88,7 +161,7 @@ ENDIF(OPENGL_TYPE STREQUAL "AUTO")
 
 IF(OPENGL_TYPE STREQUAL "OPENGL")
   IF(NOT OPENGL_FOUND)
-    MESAGE(FATAL_ERROR "OpenGL was requested but CMake couldn't find it.")
+    MESSAGE(FATAL_ERROR "OpenGL was requested but CMake couldn't find it.")
   ENDIF(NOT OPENGL_FOUND)
 ENDIF(OPENGL_TYPE STREQUAL "OPENGL")
 
@@ -316,6 +389,7 @@ LIST(APPEND source src/platform/win95/wpchunk.cpp)
 LIST(APPEND source src/platform/win95/zsp.cpp)
 LIST(APPEND source src/renderer/opengl.c)
 LIST(APPEND source src/renderer/oglfunc.c)
+LIST(APPEND source src/renderer/postprocess.c)
 LIST(APPEND source src/media/video/fmv.c)
 LIST(APPEND source src/media/video/movie.c)
 LIST(APPEND source src/media/audio/sdl_audio.c)
@@ -346,8 +420,31 @@ ENDIF()
 
 ADD_EXECUTABLE(avp ${source})
 
-# required dependencies
-INCLUDE_DIRECTORIES(${SDL3_INCLUDE})
+# Ship the optional post-processing shader pack beside the executable.
+ADD_CUSTOM_COMMAND(TARGET avp POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+          "${CMAKE_CURRENT_SOURCE_DIR}/shaders"
+          "$<TARGET_FILE_DIR:avp>/shaders"
+  COMMENT "Copying NakedAVP shaders next to the game binary")
+
+# For dynamic vcpkg triplets, copy installed runtime DLLs beside avp.exe so
+# a fresh build can run without requiring the user to edit PATH. The script
+# is a no-op when vcpkg is not being used or no DLLs are present.
+IF(WIN32 AND VCPKG_INSTALLED_DIR AND VCPKG_TARGET_TRIPLET)
+  ADD_CUSTOM_COMMAND(TARGET avp POST_BUILD
+    COMMAND ${CMAKE_COMMAND}
+      "-DAVP_VCPKG_TRIPLET_DIR=${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}"
+      "-DAVP_DEST_DIR=$<TARGET_FILE_DIR:avp>"
+      "-DAVP_CONFIG=$<CONFIG>"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyVcpkgRuntime.cmake"
+    COMMENT "Copying vcpkg runtime DLLs next to avp.exe")
+ENDIF()
+
+# The imported SDL3 target supplies its own include directories. The legacy
+# FindSDL3 fallback exposes a path variable instead.
+IF(NOT AVP_SDL3_CONFIG_TARGET AND SDL3_INCLUDE)
+  INCLUDE_DIRECTORIES(${SDL3_INCLUDE})
+ENDIF()
 
 IF(OPENGL_TYPE STREQUAL "OPENGL")
   INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
@@ -360,7 +457,7 @@ IF(OPENGL_TYPE STREQUAL "OPENGLES2")
 ENDIF(OPENGL_TYPE STREQUAL "OPENGLES2")
 
 
-TARGET_LINK_LIBRARIES(avp ${SDL3_LIBRARY})
+TARGET_LINK_LIBRARIES(avp ${AVP_SDL3_TARGET})
 TARGET_LINK_LIBRARIES(avp Threads::Threads)
 TARGET_LINK_LIBRARIES(avp ${AVP_FFMPEG_TARGET})
 

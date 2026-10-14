@@ -132,6 +132,13 @@ char *GetTextString(enum TEXTSTRING_ID stringID)
 			case TEXTSTRING_ANTIALIASING_OFF_NEW: return "Off";
 			case TEXTSTRING_ANTIALIASING_2X_NEW: return "2x";
 			case TEXTSTRING_ANTIALIASING_4X_NEW: return "4x";
+			case TEXTSTRING_POSTPROCESSING_BLOOM_OFF_NEW: return "Off";
+			case TEXTSTRING_POSTPROCESSING_BLOOM_ON_NEW: return "On";
+			case TEXTSTRING_POSTPROCESSING_BLOOM_NEW: return "Post-Processing (Bloom)";
+			case TEXTSTRING_DYNAMIC_LIGHTING_OFF_NEW: return "Off";
+			case TEXTSTRING_DYNAMIC_LIGHTING_ON_NEW: return "On";
+			case TEXTSTRING_DYNAMIC_LIGHTING_NEW: return "Dynamic Lighting";
+			case TEXTSTRING_DYNAMIC_LIGHTING_HELP_NEW: return "Realtime light from nearby objects and effects, including muzzle flashes and explosions.";
 			default: break;
 		}
 	}

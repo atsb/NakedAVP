@@ -25,7 +25,7 @@
 #include "opengl.h"
 #include "render_workers.h"
 
-int LightIntensityAtPoint(VECTORCH *pointPtr);
+int LightIntensityAtPointForRendering(VECTORCH *pointPtr);
 
 extern IMAGEHEADER ImageHeaderArray[];
 extern VIEWDESCRIPTORBLOCK *Global_VDB_Ptr;
@@ -66,6 +66,64 @@ static GLfloat GetRequestedAnisotropy(void)
 	}
 }
 static D3DTexture *CurrentlyBoundTexture = NULL;
+
+static D3DTexture *OGLTextureRegistry = NULL;
+static GLuint UploadOGLTexture(D3DTexture *tex, const unsigned char *buf);
+
+static void RegisterOGLTexture(D3DTexture *tex)
+{
+	if (tex == NULL || tex->registeredTexture)
+		return;
+	tex->registryNext = OGLTextureRegistry;
+	OGLTextureRegistry = tex;
+	tex->registeredTexture = 1;
+}
+
+static void UnregisterOGLTexture(D3DTexture *tex)
+{
+	D3DTexture **link;
+	if (tex == NULL || !tex->registeredTexture)
+		return;
+	link = &OGLTextureRegistry;
+	while (*link != NULL && *link != tex)
+		link = &(*link)->registryNext;
+	if (*link == tex)
+		*link = tex->registryNext;
+	tex->registryNext = NULL;
+	tex->registeredTexture = 0;
+}
+
+void OpenGL_InvalidateTextureObjects(void)
+{
+	D3DTexture *tex;
+	for (tex = OGLTextureRegistry; tex != NULL; tex = tex->registryNext)
+		tex->id = 0;
+	CurrTextureHandle = NULL;
+	CurrentlyBoundTexture = NULL;
+	CurrentTranslucencyMode = TRANSLUCENCY_NOT_SET;
+	CurrentFilteringMode = FILTERING_NOT_SET;
+}
+
+void OpenGL_RestoreTextureObjects(void)
+{
+	D3DTexture *tex;
+	if (pglGenTextures == NULL)
+		return;
+	for (tex = OGLTextureRegistry; tex != NULL; tex = tex->registryNext)
+	{
+		if (tex->id == 0 && tex->restoreBuf != NULL &&
+			UploadOGLTexture(tex, tex->restoreBuf) == 0)
+		{
+			fprintf(stderr, "OpenGL: failed to restore texture %p (%ux%u)\n",
+					(void *)tex, tex->w, tex->h);
+		}
+	}
+	pglBindTexture(GL_TEXTURE_2D, 0);
+	CurrentlyBoundTexture = NULL;
+	CurrTextureHandle = NULL;
+	CurrentFilteringMode = FILTERING_NOT_SET;
+	CurrentTranslucencyMode = TRANSLUCENCY_NOT_SET;
+}
 
 #if defined(_MSC_VER)
 #define ALIGN16 __declspec(align(16))
@@ -201,6 +259,27 @@ A few things:
 - Fix code for separate color support.
 */
 
+/*
+ * Rebind the engine-owned client arrays after a screen-space post-process.
+ * The bloom pass temporarily points OpenGL at its own fullscreen-quad data;
+ * leaving those pointers installed would make the next frame read stale stack
+ * memory. Also invalidate the renderer's state cache because the post-process
+ * binds private textures and changes blend/depth state.
+ */
+void OpenGL_PostProcessResetState(void)
+{
+	pglEnableClientState(GL_VERTEX_ARRAY);
+	pglVertexPointer(4, GL_FLOAT, sizeof(varr[0]), varr[0].v);
+	pglEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	pglTexCoordPointer(2, GL_FLOAT, sizeof(varr[0]), varr[0].t);
+	pglEnableClientState(GL_COLOR_ARRAY);
+	pglColorPointer(4, GL_UNSIGNED_BYTE, sizeof(varr[0]), varr[0].c);
+
+	CurrentlyBoundTexture = NULL;
+	CurrentFilteringMode = FILTERING_NOT_SET;
+	CurrentTranslucencyMode = TRANSLUCENCY_NOT_SET;
+}
+
 void InitOpenGL()
 {
 	AVP_RenderWorkers_Init();
@@ -215,8 +294,12 @@ void InitOpenGL()
 	}
 #endif
 
-	CurrentTranslucencyMode = TRANSLUCENCY_OFF;
+	CurrTextureHandle = NULL;
+	CurrentlyBoundTexture = NULL;
+	CurrentTranslucencyMode = TRANSLUCENCY_NOT_SET;
+	CurrentFilteringMode = FILTERING_NOT_SET;
 	pglBlendFunc(GL_ONE, GL_ZERO);
+	pglDisable(GL_ALPHA_TEST);
 
 	pglAlphaFunc(GL_GREATER, 0.0f);
 
@@ -244,6 +327,8 @@ void InitOpenGL()
 
 	starrc = 0;
 	starrp = starr;
+
+	OpenGL_RestoreTextureObjects();
 }
 
 static void FlushTriangleBuffers(int backup)
@@ -540,97 +625,54 @@ static unsigned int PowerOfTwo(unsigned int v)
 	return v + 1;
 }
 
-GLuint CreateOGLTexture(D3DTexture *tex, unsigned char *buf)
+static GLuint UploadOGLTexture(D3DTexture *tex, const unsigned char *buf)
 {
-	if (buf == NULL)
-	{
-		// converting DDSurface to D3DTexture
-		buf = tex->buf;
-	}
-	if (buf == NULL)
-	{
-		fprintf(stderr, "CreateOGLTexture - null buffer\n");
+	GLuint h = 0;
+	GLfloat max_anisotropy;
+	unsigned int potWidth;
+	unsigned int potHeight;
+
+	if (tex == NULL || buf == NULL || tex->w == 0 || tex->h == 0 ||
+		pglGenTextures == NULL)
 		return 0;
-	}
-
-	int i;
-	int l = tex->w * tex->h;
-	for (i = 0; i < l; i++)
-	{
-		int o = i * 4;
-		int r = buf[o + 0];
-		int g = buf[o + 1];
-		int b = buf[o + 2];
-		int a = buf[o + 3];
-
-		// kinda pre-multiplied alpha;
-		// texels with zero alpha shouldn't
-		// be visible.
-		if (a == 0)
-		{
-			r = 0;
-			g = 0;
-			b = 0;
-		}
-
-		buf[o + 0] = r;
-		buf[o + 1] = g;
-		buf[o + 2] = b;
-		buf[o + 3] = a;
-	}
 
 	tex->TexWidth = tex->w;
 	tex->TexHeight = tex->h;
-
-	int PotWidth = PowerOfTwo(tex->TexWidth);
-	int PotHeight = PowerOfTwo(tex->TexHeight);
-	tex->IsNpot = (PotWidth != tex->TexWidth) || (PotHeight != tex->TexHeight);
-
-	GLuint h;
-	GLfloat max_anisotropy;
+	potWidth = PowerOfTwo(tex->TexWidth);
+	potHeight = PowerOfTwo(tex->TexHeight);
+	tex->IsNpot = (potWidth != tex->TexWidth) || (potHeight != tex->TexHeight);
 
 	FlushTriangleBuffers(1);
-
 	pglGenTextures(1, &h);
+	if (h == 0)
+		return 0;
 
 	pglBindTexture(GL_TEXTURE_2D, h);
 	pglTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	if (tex->IsNpot)
 	{
-		// OpenGL 1.x compatibility
-		tex->TexWidth = PotWidth;
-		tex->TexHeight = PotHeight;
-
+		tex->TexWidth = potWidth;
+		tex->TexHeight = potHeight;
 		pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-		pglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->TexWidth, tex->TexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		pglTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex->w, tex->h, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+		pglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->TexWidth, tex->TexHeight,
+					  0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		pglTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex->w, tex->h,
+						 GL_RGBA, GL_UNSIGNED_BYTE, buf);
 	}
 	else
 	{
 		pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		if (tex->IsNpot)
-		{
-			pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		}
-		else
-		{
-			pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TextureMinFilter);
-		}
-
-		pglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->w, tex->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+		pglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TextureMinFilter);
+		pglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->w, tex->h, 0,
+					  GL_RGBA, GL_UNSIGNED_BYTE, buf);
 	}
 
 	pglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	tex->buf = NULL;
-	tex->id = h;
+	tex->id = (int)h;
 	tex->filter = FILTERING_BILINEAR_ON;
 	tex->RecipW = 1.0f / (float)tex->TexWidth;
 	tex->RecipH = 1.0f / (float)tex->TexHeight;
@@ -646,14 +688,70 @@ GLuint CreateOGLTexture(D3DTexture *tex, unsigned char *buf)
 		}
 	}
 
-	if (CurrentlyBoundTexture != NULL)
+	if (CurrentlyBoundTexture != NULL && CurrentlyBoundTexture->id != 0)
+		pglBindTexture(GL_TEXTURE_2D, (GLuint)CurrentlyBoundTexture->id);
+	else
+		pglBindTexture(GL_TEXTURE_2D, 0);
+
+	return h;
+}
+
+GLuint CreateOGLTexture(D3DTexture *tex, unsigned char *buf)
+{
+	size_t pixelCount;
+	size_t byteCount;
+	size_t i;
+	GLuint h;
+
+	if (tex == NULL)
 	{
-		/* restore the previously-bound texture */
-		pglBindTexture(GL_TEXTURE_2D, CurrentlyBoundTexture->id);
+		free(buf);
+		return 0;
+	}
+	if (buf == NULL)
+		buf = tex->buf;
+	if (buf == NULL)
+	{
+		fprintf(stderr, "CreateOGLTexture - null buffer\n");
+		return 0;
+	}
+	if (tex->w == 0 || tex->h == 0)
+	{
+		fprintf(stderr, "CreateOGLTexture - invalid texture size %ux%u\n", tex->w, tex->h);
+		free(buf);
+		tex->buf = NULL;
+		return 0;
 	}
 
-	free(buf);
+	pixelCount = (size_t)tex->w * (size_t)tex->h;
+	byteCount = pixelCount * 4U;
+	for (i = 0; i < pixelCount; ++i)
+	{
+		size_t offset = i * 4U;
+		if (buf[offset + 3] == 0)
+		{
+			buf[offset + 0] = 0;
+			buf[offset + 1] = 0;
+			buf[offset + 2] = 0;
+		}
+	}
 
+	free(tex->restoreBuf);
+	tex->restoreBuf = (unsigned char *)malloc(byteCount);
+	if (tex->restoreBuf == NULL)
+	{
+		fprintf(stderr, "CreateOGLTexture - could not retain %zu bytes for context restoration\n", byteCount);
+		free(buf);
+		tex->buf = NULL;
+		return 0;
+	}
+	memcpy(tex->restoreBuf, buf, byteCount);
+	tex->buf = NULL;
+
+	h = UploadOGLTexture(tex, tex->restoreBuf);
+	RegisterOGLTexture(tex);
+
+	free(buf);
 	return h;
 }
 
@@ -666,9 +764,11 @@ void ReleaseD3DTexture(void *tex)
 		return;
 	}
 
-	if (TextureHandle->id != 0)
+	UnregisterOGLTexture(TextureHandle);
+	if (TextureHandle->id != 0 && pglDeleteTextures != NULL)
 	{
-		pglDeleteTextures(1, (GLuint *)&(TextureHandle->id));
+		GLuint textureId = (GLuint)TextureHandle->id;
+		pglDeleteTextures(1, &textureId);
 		TextureHandle->id = 0;
 	}
 
@@ -677,6 +777,8 @@ void ReleaseD3DTexture(void *tex)
 		free(TextureHandle->buf);
 		TextureHandle->buf = NULL;
 	}
+	free(TextureHandle->restoreBuf);
+	TextureHandle->restoreBuf = NULL;
 
 	free(TextureHandle);
 }
@@ -939,7 +1041,7 @@ void D3D_Decal_Output(DECAL *decalPtr, RENDERVERTEX *renderVerticesPtr)
 
 	if (decalDescPtr->IsLit)
 	{
-		int intensity = LightIntensityAtPoint(decalPtr->Vertices);
+		int intensity = LightIntensityAtPointForRendering(decalPtr->Vertices);
 
 		r = MUL_FIXED(intensity, decalDescPtr->RedScale[CurrentVisionMode]);
 		g = MUL_FIXED(intensity, decalDescPtr->GreenScale[CurrentVisionMode]);
@@ -989,7 +1091,7 @@ void D3D_Particle_Output(PARTICLE *particlePtr, RENDERVERTEX *renderVerticesPtr)
 
 	if (particleDescPtr->IsLit && !(particlePtr->ParticleID == PARTICLE_ALIEN_BLOOD && CurrentVisionMode == VISION_MODE_PRED_SEEALIENS))
 	{
-		int intensity = LightIntensityAtPoint(&particlePtr->Position);
+		int intensity = LightIntensityAtPointForRendering(&particlePtr->Position);
 
 		if (particlePtr->ParticleID == PARTICLE_SMOKECLOUD || particlePtr->ParticleID == PARTICLE_ANDROID_BLOOD)
 		{
@@ -1677,7 +1779,8 @@ void D3D_RenderMenuSmallString(char *stringPtr, int x, int y, int colour)
 	quadVertices[2].Y = y + MUL_FIXED(scale, HUD_FONT_HEIGHT + 1);
 	quadVertices[3].Y = y + MUL_FIXED(scale, HUD_FONT_HEIGHT + 1);
 
-	CheckFilteringModeIsCorrect(FILTERING_BILINEAR_OFF);
+	/* The atlas is antialiased; nearest sampling turned scaled glyphs into blocks. */
+	CheckFilteringModeIsCorrect(scale > ONE_FIXED ? FILTERING_BILINEAR_ON : FILTERING_BILINEAR_OFF);
 	while (*stringPtr)
 	{
 		unsigned char c = (unsigned char)*stringPtr++;
@@ -1823,7 +1926,8 @@ void D3D_RenderHUDString_Centred(char *stringPtr, int centreX, int y, int colour
 	quadVertices[2].Y = y + MUL_FIXED(HUDScaleFactor, HUD_FONT_HEIGHT + 1);
 	quadVertices[3].Y = y + MUL_FIXED(HUDScaleFactor, HUD_FONT_HEIGHT + 1);
 
-	CheckFilteringModeIsCorrect(FILTERING_BILINEAR_OFF);
+	/* The briefing and "press any key" strings are scaled to the output height. */
+	CheckFilteringModeIsCorrect(HUDScaleFactor > ONE_FIXED ? FILTERING_BILINEAR_ON : FILTERING_BILINEAR_OFF);
 
 	while (*stringPtr)
 	{
