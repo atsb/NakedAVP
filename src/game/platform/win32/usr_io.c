@@ -37,6 +37,19 @@ extern void ShowMultiplayerScores(void);
 
 extern int NormalFrameTime;
 
+static double MouseCountsToAngleDelta(double counts, int sensitivity, int zoomLevel)
+{
+	double delta;
+	if (sensitivity <= 0) return 0.0;
+	delta = counts * (double)sensitivity * (2000.0 / 65536.0);
+	if (zoomLevel > 0)
+	{
+		if (zoomLevel >= 31) return 0.0;
+		delta /= (double)(1U << zoomLevel);
+	}
+	return delta;
+}
+
 FIXED_INPUT_CONFIGURATION FixedInputConfig =
 {
 	KEY_1,				// Weapon1;
@@ -845,6 +858,8 @@ void ReadPlayerGameInput(STRATEGYBLOCK* sbPtr)
 	PLAYER_INPUT_CONFIGURATION *primaryInput;
 	PLAYER_INPUT_CONFIGURATION *secondaryInput;
 	PLAYER_STATUS *playerStatusPtr;
+	static int previousMouseLookAllowed = 0;
+	int mouseLookAllowed;
 
     /* get the player status block ... */
     playerStatusPtr = (PLAYER_STATUS *) (sbPtr->SBdataptr);
@@ -852,6 +867,24 @@ void ReadPlayerGameInput(STRATEGYBLOCK* sbPtr)
 	
 	/* start off by initialising the inputs */
 	InitPlayerGameInput(sbPtr);
+
+	mouseLookAllowed = IOFOCUS_AcceptControls() && !InGameMenusAreRunning();
+	if (previousMouseLookAllowed != mouseLookAllowed) {
+		extern void ResetMouseLookInputState(void);
+		ResetMouseLookInputState();
+	}
+	previousMouseLookAllowed = mouseLookAllowed;
+
+	{
+		extern double MouseLookYawDelta;
+		extern double MouseLookPitchDelta;
+		extern int MouseLookYawEnabled;
+		extern int MouseLookPitchEnabled;
+		MouseLookYawDelta = 0.0;
+		MouseLookPitchDelta = 0.0;
+		MouseLookYawEnabled = 0;
+		MouseLookPitchEnabled = 0;
+	}
 
 	switch (AvP.PlayerType)
 	{
@@ -1257,33 +1290,28 @@ void ReadPlayerGameInput(STRATEGYBLOCK* sbPtr)
 	{
 		extern int MouseVelX;
 		extern int MouseVelY;
+        extern double MouseLookYawDelta;
+        extern double MouseLookPitchDelta;
+        extern int MouseLookYawEnabled;
+        extern int MouseLookPitchEnabled;
+
+        MouseLookYawEnabled = 0;
+        MouseLookPitchEnabled = 0;
+        MouseLookYawDelta = 0.0;
+        MouseLookPitchDelta = 0.0;
 
 
 		if(ControlMethods.HAxisIsTurning)
 		{
-			if(MouseVelX<0)
-			{
-				playerStatusPtr->Mvt_InputRequests.Flags.Rqst_TurnLeft = 1;
-				playerStatusPtr->Mvt_AnalogueTurning = 1;
-				playerStatusPtr->Mvt_TurnIncrement = ((int)MouseVelX)*ControlMethods.MouseXSensitivity;
-			   
+			extern float MouseDeltaX;
+			extern double MouseLookYawDelta;
+			extern int MouseLookYawEnabled;
+			extern int CameraZoomLevel;
+			if (mouseLookAllowed && GotMouse && ControlMethods.MouseXSensitivity > 0) {
+				MouseLookYawEnabled = 1;
+				MouseLookYawDelta = MouseCountsToAngleDelta((double)MouseDeltaX,
+					ControlMethods.MouseXSensitivity, CameraZoomLevel);
 			}
-			else if(MouseVelX>0)
-			{
-				playerStatusPtr->Mvt_InputRequests.Flags.Rqst_TurnRight = 1;
-				playerStatusPtr->Mvt_AnalogueTurning = 1;
-				playerStatusPtr->Mvt_TurnIncrement = ((int)MouseVelX)*ControlMethods.MouseXSensitivity;
-			}
-
-			/* KJL 17:36:37 9/9/97 - cap values if strafing */
-		   	if(playerStatusPtr->Mvt_InputRequests.Flags.Rqst_Strafe)
-			{
-		   		if(playerStatusPtr->Mvt_TurnIncrement < -ONE_FIXED)
-		   			playerStatusPtr->Mvt_TurnIncrement = -ONE_FIXED;
-		   		if(playerStatusPtr->Mvt_TurnIncrement > ONE_FIXED)
-		   			playerStatusPtr->Mvt_TurnIncrement = ONE_FIXED;
-			}
-			
 		}
 		else // it's sidestep
 		{
@@ -1327,22 +1355,19 @@ void ReadPlayerGameInput(STRATEGYBLOCK* sbPtr)
 		}
 		else // it's looking
 		{
-			int newMouseVelY;
+			extern float MouseDeltaY;
+			extern double MouseLookPitchDelta;
+			extern int MouseLookPitchEnabled;
+			extern int CameraZoomLevel;
+			double newMouseDeltaY;
 
-			if (ControlMethods.FlipVerticalAxis) newMouseVelY = -MouseVelY;
-			else newMouseVelY = MouseVelY;
+			newMouseDeltaY = (double)MouseDeltaY;
+			if (ControlMethods.FlipVerticalAxis) newMouseDeltaY = -newMouseDeltaY;
 
-			if(newMouseVelY<0)
-			{
-				playerStatusPtr->Mvt_InputRequests.Flags.Rqst_LookUp = 1;
-				playerStatusPtr->Mvt_AnaloguePitching = 1;
-				playerStatusPtr->Mvt_PitchIncrement = ((int)newMouseVelY)*ControlMethods.MouseYSensitivity;
-			}
-			else if(newMouseVelY>0)
-			{
-				playerStatusPtr->Mvt_InputRequests.Flags.Rqst_LookDown = 1;
-				playerStatusPtr->Mvt_AnaloguePitching = 1;
-				playerStatusPtr->Mvt_PitchIncrement = ((int)newMouseVelY)*ControlMethods.MouseYSensitivity;
+			if (mouseLookAllowed && GotMouse && ControlMethods.MouseYSensitivity > 0) {
+				MouseLookPitchEnabled = 1;
+				MouseLookPitchDelta = MouseCountsToAngleDelta(newMouseDeltaY,
+					ControlMethods.MouseYSensitivity, CameraZoomLevel);
 			}
 		}	
 								 

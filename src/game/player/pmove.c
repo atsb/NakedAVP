@@ -2,6 +2,9 @@
 	Source file for Player Movement ...
 ----------------------------------------------------*/
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "3dc.h"
 #include "inline.h"
@@ -62,6 +65,26 @@ static void AlienContactWeapon(void);
 extern unsigned char KeyboardInput[];
 #endif
 extern int DebouncedGotAnyKey;
+extern double MouseLookYawDelta;
+extern double MouseLookPitchDelta;
+extern int MouseLookYawEnabled;
+extern int MouseLookPitchEnabled;
+extern int NormalFrameTime;
+
+static double MouseLookYawRemainder = 0.0;
+static double MouseLookPitchRemainder = 0.0;
+
+void PMove_ResetMouseLookRemainders(void)
+{
+	MouseLookYawRemainder = 0.0;
+	MouseLookPitchRemainder = 0.0;
+}
+
+void PMove_GetMouseLookRenderFractions(double *yaw, double *pitch)
+{
+    if (yaw != NULL) *yaw = MouseLookYawRemainder;
+    if (pitch != NULL) *pitch = MouseLookPitchRemainder;
+}
 
 /*KJL*****************************************************
 * If the define below is set to non-zero then the player *
@@ -94,7 +117,6 @@ int executeDemo;
 
 /* Global Externs */
 extern DISPLAYBLOCK* Player;
-extern int NormalFrameTime;
 extern int predHUDSoundHandle;
 extern int predOVision_SoundHandle;
 extern int TauntSoundPlayed;
@@ -872,6 +894,38 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 	 	MatrixToEuler(&dynPtr->OrientMat, &dynPtr->OrientEuler);
 
 	}
+
+	if (MouseLookYawEnabled && !playerStatusPtr->Mvt_InputRequests.Flags.Rqst_Strafe)
+	{
+		double yawDelta = MouseLookYawDelta;
+		int yawStep;
+		MATRIXCH mouseYawMat;
+		if (MIRROR_CHEATMODE) yawDelta = -yawDelta;
+		MouseLookYawRemainder += yawDelta;
+		yawStep = (int)MouseLookYawRemainder;
+		MouseLookYawRemainder -= (double)yawStep;
+		if (yawStep != 0)
+		{
+			int angle = yawStep & wrap360;
+			mouseYawMat.mat11 = GetCos(angle);
+			mouseYawMat.mat12 = 0;
+			mouseYawMat.mat13 = -GetSin(angle);
+			mouseYawMat.mat21 = 0;
+			mouseYawMat.mat22 = 65536;
+			mouseYawMat.mat23 = 0;
+			mouseYawMat.mat31 = GetSin(angle);
+			mouseYawMat.mat32 = 0;
+			mouseYawMat.mat33 = GetCos(angle);
+			MatrixMultiply(&dynPtr->OrientMat, &mouseYawMat, &dynPtr->OrientMat);
+			MatrixToEuler(&dynPtr->OrientMat, &dynPtr->OrientEuler);
+		}
+	}
+	else
+	{
+		MouseLookYawRemainder = 0.0;
+	}
+	MouseLookYawDelta = 0.0;
+
 	/*------------------------------------------------------ 
 	CROUCHING, LYING DOWN, ETC.
 	------------------------------------------------------*/ 
@@ -944,7 +998,8 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 		{
 			if (timeBeenContinuouslyMoving>TIMEBEFOREAUTOCENTREVIEW
 			&& !playerStatusPtr->Mvt_InputRequests.Flags.Rqst_LookUp
-			&& !playerStatusPtr->Mvt_InputRequests.Flags.Rqst_LookDown)
+			&& !playerStatusPtr->Mvt_InputRequests.Flags.Rqst_LookDown
+			&& !(MouseLookPitchEnabled && MouseLookPitchDelta != 0.0))
 			{
 				playerStatusPtr->Mvt_InputRequests.Flags.Rqst_CentreView =1;
 			}
@@ -981,7 +1036,6 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 										NormalFrameTime>>PANRATESHIFT
 									);
 
-			PlayerStatusPtr->ViewPanX++; // deadzone fix
 			if (playerStatusPtr->ViewPanX > AllowedLookDownAngle) playerStatusPtr->ViewPanX = AllowedLookDownAngle;
 
         	playerStatusPtr->ViewPanX -= 1024;
@@ -1007,6 +1061,56 @@ void ExecuteFreeMovement(STRATEGYBLOCK* sbPtr)
 			playerStatusPtr->ViewPanX &= wrap360;
 		}
 	}
+
+	if (MouseLookPitchEnabled && !playerStatusPtr->Absolute_Pitching)
+	{
+		int allowedLookUpAngle = (AvP.PlayerType == I_Alien) ? 0 : 128;
+		int allowedLookDownAngle = (AvP.PlayerType == I_Alien) ? 2048 : (2048 - 128);
+		int pitchCoordinate = (playerStatusPtr->ViewPanX + 1024) & wrap360;
+		double pitchDelta = MouseLookPitchDelta;
+		double accumulated;
+		int pitchStep;
+
+		if (pitchCoordinate < allowedLookUpAngle)
+			pitchCoordinate = allowedLookUpAngle;
+		if (pitchCoordinate > allowedLookDownAngle)
+			pitchCoordinate = allowedLookDownAngle;
+
+		if ((pitchCoordinate <= allowedLookUpAngle && pitchDelta < 0.0) ||
+			(pitchCoordinate >= allowedLookDownAngle && pitchDelta > 0.0))
+		{
+			MouseLookPitchRemainder = 0.0;
+		}
+		else
+		{
+			accumulated = MouseLookPitchRemainder + pitchDelta;
+			pitchStep = (int)accumulated;
+			pitchCoordinate += pitchStep;
+			if (pitchCoordinate < allowedLookUpAngle)
+			{
+				pitchCoordinate = allowedLookUpAngle;
+				MouseLookPitchRemainder = 0.0;
+			}
+			else if (pitchCoordinate > allowedLookDownAngle)
+			{
+				pitchCoordinate = allowedLookDownAngle;
+				MouseLookPitchRemainder = 0.0;
+			}
+			else
+			{
+				MouseLookPitchRemainder = accumulated - (double)pitchStep;
+				if ((pitchCoordinate <= allowedLookUpAngle && MouseLookPitchRemainder < 0.0) ||
+					(pitchCoordinate >= allowedLookDownAngle && MouseLookPitchRemainder > 0.0))
+					MouseLookPitchRemainder = 0.0;
+			}
+		}
+		playerStatusPtr->ViewPanX = (pitchCoordinate - 1024) & wrap360;
+	}
+	else
+	{
+		MouseLookPitchRemainder = 0.0;
+	}
+	MouseLookPitchDelta = 0.0;
 
 	HandleGrapplingHookForces();
 }
