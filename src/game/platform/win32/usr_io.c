@@ -37,6 +37,19 @@ extern void ShowMultiplayerScores(void);
 
 extern int NormalFrameTime;
 
+static double MouseCountsToAngleDelta(double counts, int sensitivity, int zoomLevel)
+{
+	double delta;
+	if (sensitivity <= 0) return 0.0;
+	delta = counts * (double)sensitivity * (2000.0 / 65536.0);
+	if (zoomLevel > 0)
+	{
+		if (zoomLevel >= 31) return 0.0;
+		delta /= (double)(1U << zoomLevel);
+	}
+	return delta;
+}
+
 FIXED_INPUT_CONFIGURATION FixedInputConfig =
 {
 	KEY_1,				// Weapon1;
@@ -1296,10 +1309,8 @@ void ReadPlayerGameInput(STRATEGYBLOCK* sbPtr)
 			extern int CameraZoomLevel;
 			if (mouseLookAllowed && GotMouse && ControlMethods.MouseXSensitivity > 0) {
 				MouseLookYawEnabled = 1;
-				MouseLookYawDelta = (double)MouseDeltaX *
-					(double)ControlMethods.MouseXSensitivity * (2000.0 / 65536.0);
-				if (CameraZoomLevel > 0)
-					MouseLookYawDelta /= (double)(1 << CameraZoomLevel);
+				MouseLookYawDelta = MouseCountsToAngleDelta((double)MouseDeltaX,
+					ControlMethods.MouseXSensitivity, CameraZoomLevel);
 			}
 		}
 		else // it's sidestep
@@ -1355,11 +1366,8 @@ void ReadPlayerGameInput(STRATEGYBLOCK* sbPtr)
 
 			if (mouseLookAllowed && GotMouse && ControlMethods.MouseYSensitivity > 0) {
 				MouseLookPitchEnabled = 1;
-				MouseLookPitchDelta = newMouseDeltaY *
-					(double)ControlMethods.MouseYSensitivity / 64.0;
-				if (CameraZoomLevel > 0)
-					MouseLookPitchDelta /= (double)(1 << CameraZoomLevel);
-
+				MouseLookPitchDelta = MouseCountsToAngleDelta(newMouseDeltaY,
+					ControlMethods.MouseYSensitivity, CameraZoomLevel);
 			}
 		}	
 								 
