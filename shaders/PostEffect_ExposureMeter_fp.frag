@@ -21,26 +21,26 @@ void main()
     int x;
     int y;
 
-    for (y = 0; y < 7; ++y) {
-        for (x = 0; x < 12; ++x) {
-            vec2 coord = (vec2(float(x), float(y)) + vec2(0.5)) / vec2(12.0, 7.0);
+    for (y = 0; y < 5; ++y) {
+        for (x = 0; x < 8; ++x) {
+            vec2 coord = (vec2(float(x), float(y)) + vec2(0.5)) / vec2(8.0, 5.0);
             float lum = luminanceAt(coord);
             globalLuminance += lum;
             globalHighlights += highlightAt(lum);
         }
     }
-    globalLuminance /= 84.0;
-    globalHighlights /= 84.0;
+    globalLuminance /= 40.0;
+    globalHighlights /= 40.0;
 
-    for (y = 0; y < 5; ++y) {
-        for (x = 0; x < 5; ++x) {
-            vec2 coord = vec2(0.38, 0.38) +
-                         (vec2(float(x), float(y)) + vec2(0.5)) * vec2(0.048, 0.048);
+    for (y = 0; y < 3; ++y) {
+        for (x = 0; x < 3; ++x) {
+            vec2 coord = vec2(0.44, 0.44) +
+                         vec2(float(x), float(y)) * vec2(0.06, 0.06);
             float lum = luminanceAt(coord);
             centreHighlights += highlightAt(lum);
         }
     }
-    centreHighlights /= 25.0;
+    centreHighlights /= 9.0;
 
     float weightedLuminance = globalLuminance;
     float weightedHighlights = mix(globalHighlights, centreHighlights, 0.42);

@@ -61,8 +61,8 @@ typedef struct AVP_RenderBatch
 #define AVP_RENDER_MAX_WORKERS 4
 #define AVP_RENDER_BATCH_VERTICES 256
 #define AVP_RENDER_BATCH_JOBS 32
-#define AVP_RENDER_ASYNC_MIN_VERTICES 32
-#define AVP_RENDER_ASYNC_MIN_JOBS 4
+#define AVP_RENDER_ASYNC_MIN_VERTICES 96
+#define AVP_RENDER_ASYNC_MIN_JOBS 16
 
 static AVP_RenderBatch queue[AVP_RENDER_QUEUE_SIZE];
 static size_t queue_head, queue_tail, queue_count;
@@ -196,7 +196,12 @@ static void *worker_main(void *unused)
             avp_mutex_unlock(&queue_mutex);
             break;
         }
-        batch = queue[queue_head];
+        batch.job_count = queue[queue_head].job_count;
+        batch.vertex_count = queue[queue_head].vertex_count;
+        memcpy(batch.input, queue[queue_head].input,
+               batch.vertex_count * sizeof(RENDERVERTEX));
+        memcpy(batch.jobs, queue[queue_head].jobs,
+               batch.job_count * sizeof(AVP_RenderJob));
         queue_head = (queue_head + 1) % AVP_RENDER_QUEUE_SIZE;
         queue_count--;
         active_batches++;
@@ -225,15 +230,19 @@ static size_t detect_worker_count(void)
     GetSystemInfo(&info);
     if (info.dwNumberOfProcessors < 2)
         return 0;
-    if (info.dwNumberOfProcessors - 1 < AVP_RENDER_MAX_WORKERS)
-        return info.dwNumberOfProcessors - 1;
+    if (info.dwNumberOfProcessors <= 4)
+        return 1;
+    if (info.dwNumberOfProcessors <= 6)
+        return 2;
     return AVP_RENDER_MAX_WORKERS;
 #else
     long cpus = sysconf(_SC_NPROCESSORS_ONLN);
     if (cpus < 2)
         return 0;
-    if (cpus - 1 < AVP_RENDER_MAX_WORKERS)
-        return (size_t)(cpus - 1);
+    if (cpus <= 4)
+        return 1;
+    if (cpus <= 6)
+        return 2;
     return AVP_RENDER_MAX_WORKERS;
 #endif
 }
@@ -246,7 +255,12 @@ static void enqueue_batch_locked(const AVP_RenderBatch *batch)
     if (stopping)
         return;
     dst = &queue[queue_tail];
-    *dst = *batch;
+    dst->job_count = batch->job_count;
+    dst->vertex_count = batch->vertex_count;
+    memcpy(dst->input, batch->input,
+           batch->vertex_count * sizeof(RENDERVERTEX));
+    memcpy(dst->jobs, batch->jobs,
+           batch->job_count * sizeof(AVP_RenderJob));
     queue_tail = (queue_tail + 1) % AVP_RENDER_QUEUE_SIZE;
     queue_count++;
     avp_cond_signal(&work_cond);
@@ -260,8 +274,14 @@ static void flush_pending_batch(int force_async)
     if (pending_batch.job_count == 0)
         return;
 
-    batch = pending_batch;
-    memset(&pending_batch, 0, sizeof(pending_batch));
+    batch.job_count = pending_batch.job_count;
+    batch.vertex_count = pending_batch.vertex_count;
+    memcpy(batch.input, pending_batch.input,
+           batch.vertex_count * sizeof(RENDERVERTEX));
+    memcpy(batch.jobs, pending_batch.jobs,
+           batch.job_count * sizeof(AVP_RenderJob));
+    pending_batch.job_count = 0;
+    pending_batch.vertex_count = 0;
 
     async = enabled &&
             (force_async ||
@@ -348,20 +368,29 @@ void AVP_RenderWorkers_Submit(const void *vertices, size_t count,
 
     if (!initialized || !enabled || count == 0 || count > 256)
     {
-        AVP_RenderBatch local_batch;
-        AVP_RenderJob local_job;
-        memset(&local_batch, 0, sizeof(local_batch));
-        memset(&local_job, 0, sizeof(local_job));
-        memcpy(local_batch.input, vertices, count * sizeof(RENDERVERTEX));
-        local_job.input_offset = 0;
-        local_job.count = count;
-        local_job.output = output;
-        local_job.mode = mode;
-        local_job.params = *params;
-        local_batch.jobs[0] = local_job;
-        local_batch.job_count = 1;
-        local_batch.vertex_count = count;
-        prepare_batch(&local_batch);
+        const RENDERVERTEX *src = (const RENDERVERTEX *)vertices;
+        size_t offset = 0;
+        while (offset < count)
+        {
+            AVP_RenderBatch local_batch;
+            AVP_RenderJob local_job;
+            size_t chunk = count - offset;
+            if (chunk > 256)
+                chunk = 256;
+            memset(&local_batch, 0, sizeof(local_batch));
+            memset(&local_job, 0, sizeof(local_job));
+            memcpy(local_batch.input, src + offset, chunk * sizeof(RENDERVERTEX));
+            local_job.input_offset = 0;
+            local_job.count = chunk;
+            local_job.output = output + offset;
+            local_job.mode = mode;
+            local_job.params = *params;
+            local_batch.jobs[0] = local_job;
+            local_batch.job_count = 1;
+            local_batch.vertex_count = chunk;
+            prepare_batch(&local_batch);
+            offset += chunk;
+        }
         return;
     }
 

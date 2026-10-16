@@ -1,4 +1,6 @@
 #include <math.h>
+#include <stdlib.h>
+#include <stddef.h>
 
 #include "3dc.h"
 
@@ -131,6 +133,69 @@ static int ExtendedDynamicLightRange(int range)
 	if (range <= 0)
 		return range;
 	return range + (range >> 1);
+}
+
+typedef struct RENDERINGLIGHTCACHEENTRY
+{
+	LIGHTBLOCK *light;
+	int effectiveRange;
+} RENDERINGLIGHTCACHEENTRY;
+
+static RENDERINGLIGHTCACHEENTRY *RenderingLightCache;
+static size_t RenderingLightCacheCapacity;
+static size_t RenderingLightCacheCount;
+static int RenderingLightCachePrepared;
+
+static int EnsureRenderingLightCache(void)
+{
+	size_t required = 0;
+	size_t index = 0;
+	int i, j;
+
+	if (RenderingLightCachePrepared)
+		return 1;
+
+	RenderingLightCacheCount = 0;
+	for (i = 0; i < NumActiveBlocks; ++i)
+	{
+		DISPLAYBLOCK *block = ActiveBlockList[i];
+		if (block->ObNumLights > 0)
+		{
+			size_t count = (size_t)block->ObNumLights;
+			if (required > ((size_t)-1) - count)
+				return 0;
+			required += count;
+		}
+	}
+
+	if (required > ((size_t)-1) / sizeof(*RenderingLightCache))
+		return 0;
+
+	if (required > RenderingLightCacheCapacity)
+	{
+		RENDERINGLIGHTCACHEENTRY *next = (RENDERINGLIGHTCACHEENTRY *)realloc(
+			RenderingLightCache, required * sizeof(*RenderingLightCache));
+		if (!next)
+			return 0;
+		RenderingLightCache = next;
+		RenderingLightCacheCapacity = required;
+	}
+
+	for (i = 0; i < NumActiveBlocks; ++i)
+	{
+		DISPLAYBLOCK *block = ActiveBlockList[i];
+		for (j = 0; j < block->ObNumLights; ++j)
+		{
+			LIGHTBLOCK *light = block->ObLights[j];
+			RenderingLightCache[index].light = light;
+			RenderingLightCache[index].effectiveRange = ExtendedDynamicLightRange(light->LightRange);
+			++index;
+		}
+	}
+
+	RenderingLightCacheCount = index;
+	RenderingLightCachePrepared = 1;
+	return 1;
 }
 
 static void AddDynamicLightForObject(LIGHTBLOCK *sourceLight, VECTORCH *vertexToLight)
@@ -292,8 +357,26 @@ int LightIntensityAtPointForRendering(VECTORCH *pointPtr)
 		return ambient;
 	}
 
-	/* Decals and particles use the same wider falloff as model lighting.
-	 * LightIntensityAtPoint() itself remains unchanged for gameplay visibility. */
+	if (EnsureRenderingLightCache())
+	{
+		size_t index;
+		for (index = 0; index < RenderingLightCacheCount; ++index)
+		{
+			LIGHTBLOCK *lptr = RenderingLightCache[index].light;
+			VECTORCH disp = lptr->LightWorld;
+			int dist;
+			int effectiveRange = RenderingLightCache[index].effectiveRange;
+			if (effectiveRange <= 0)
+				continue;
+			disp.vx -= pointPtr->vx;
+			disp.vy -= pointPtr->vy;
+			disp.vz -= pointPtr->vz;
+			dist = Approximate3dMagnitude(&disp);
+			if (dist < effectiveRange)
+				intensity += WideMulNarrowDiv(lptr->LightBright, effectiveRange - dist, effectiveRange);
+		}
+	}
+	else
 	{
 		DISPLAYBLOCK **activeBlockListPtr = ActiveBlockList;
 		for (i = NumActiveBlocks; i != 0; i--)
@@ -796,6 +879,7 @@ void AvpShowViews(void)
 	UpdateWeaponStateMachine();
 	/* lights associated with the player may have changed */
 	UpdateObjectLights(Player);
+	RenderingLightCachePrepared = 0;
 
 	if (NumOnScreenBlocks)
 	{

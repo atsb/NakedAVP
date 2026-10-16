@@ -95,6 +95,8 @@ static GLuint blurTextureB;
 static GLuint meterTexture;
 static GLuint exposureTexture;
 static int sceneWidth, sceneHeight, effectWidth, effectHeight;
+static int bloomScale = 4;
+static int rejectedWidth, rejectedHeight;
 static GLuint brightProgram, blurProgram, compositeProgram;
 static GLuint meterProgram, exposureAdaptProgram;
 static GLint brightSceneLocation = -1;
@@ -340,17 +342,53 @@ static void ConfigureTexture(GLuint texture, int width, int height)
     ConfigureTextureFormat(texture, width, height, GL_RGB, GL_RGB);
 }
 
+static void ReleasePostProcessTextures(void)
+{
+    GLuint textures[6];
+    textures[0] = sceneTexture;
+    textures[1] = brightTexture;
+    textures[2] = blurTextureA;
+    textures[3] = blurTextureB;
+    textures[4] = meterTexture;
+    textures[5] = exposureTexture;
+    if (pglDeleteTextures != NULL)
+        pglDeleteTextures(6, textures);
+    sceneTexture = brightTexture = blurTextureA = blurTextureB = 0;
+    meterTexture = exposureTexture = 0;
+    sceneWidth = sceneHeight = effectWidth = effectHeight = 0;
+    exposureInitialized = 0;
+    lastExposureTick = 0;
+}
+
 static int EnsureTextures(int width, int height)
 {
-    int qWidth = width / 4;
-    int qHeight = height / 4;
+    int scale = (width >= 1280 || height >= 720) ? 8 : 4;
+    int qWidth = width / scale;
+    int qHeight = height / scale;
     int newMeterTexture = 0;
     int newExposureTexture = 0;
+    GLint maxTextureSize = 0;
+    if (width <= 0 || height <= 0)
+        return 0;
+    if (rejectedWidth == width && rejectedHeight == height)
+        return 0;
     if (qWidth < 1)
         qWidth = 1;
     if (qHeight < 1)
         qHeight = 1;
-
+    if (sceneTexture && brightTexture && blurTextureA && blurTextureB && meterTexture && exposureTexture &&
+        sceneWidth == width && sceneHeight == height && effectWidth == qWidth && effectHeight == qHeight)
+        return 1;
+    pglGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+    if ((maxTextureSize > 0 && (width > maxTextureSize || height > maxTextureSize)) ||
+        (double)width * (double)height > 16777216.0)
+    {
+        ReleasePostProcessTextures();
+        fprintf(stderr, "NakedAVP bloom disabled for %dx%d output because it exceeds the safe texture budget.\n", width, height);
+        rejectedWidth = width;
+        rejectedHeight = height;
+        return 0;
+    }
     if (!sceneTexture)
         pglGenTextures(1, &sceneTexture);
     if (!brightTexture)
@@ -371,28 +409,52 @@ static int EnsureTextures(int width, int height)
     }
     if (!sceneTexture || !brightTexture || !blurTextureA || !blurTextureB ||
         !meterTexture || !exposureTexture)
-        return 0;
-
-    if (sceneWidth != width || sceneHeight != height || effectWidth != qWidth || effectHeight != qHeight)
     {
+        ReleasePostProcessTextures();
+        rejectedWidth = width;
+        rejectedHeight = height;
+        fprintf(stderr, "NakedAVP bloom texture allocation failed for %dx%d.\n", width, height);
+        return 0;
+    }
+
+    if (sceneWidth != width || sceneHeight != height || effectWidth != qWidth || effectHeight != qHeight ||
+        newMeterTexture || newExposureTexture)
+    {
+        GLenum glError;
+        while (pglGetError() != GL_NO_ERROR)
+        {
+        }
         ConfigureTexture(sceneTexture, width, height);
         ConfigureTexture(brightTexture, qWidth, qHeight);
         ConfigureTexture(blurTextureA, qWidth, qHeight);
         ConfigureTexture(blurTextureB, qWidth, qHeight);
+        if (newMeterTexture)
+            ConfigureTextureFormat(meterTexture, 1, 1, GL_RGB, GL_RGB);
+        if (newExposureTexture)
+            ConfigureTexture(exposureTexture, 1, 1);
+        glError = pglGetError();
+        if (glError != GL_NO_ERROR)
+        {
+            ReleasePostProcessTextures();
+            rejectedWidth = width;
+            rejectedHeight = height;
+            fprintf(stderr, "NakedAVP bloom texture setup failed for %dx%d (OpenGL error 0x%04X).\n", width, height, (unsigned int)glError);
+            return 0;
+        }
         sceneWidth = width;
         sceneHeight = height;
         effectWidth = qWidth;
         effectHeight = qHeight;
-    }
-    if (newMeterTexture)
-        ConfigureTextureFormat(meterTexture, 1, 1, GL_RGB, GL_RGB);
-    if (newExposureTexture)
-    {
-        ConfigureTexture(exposureTexture, 1, 1);
-        exposureInitialized = 0;
-        lastExposureTick = 0;
+        bloomScale = scale;
+        if (newExposureTexture)
+        {
+            exposureInitialized = 0;
+            lastExposureTick = 0;
+        }
     }
     pglBindTexture(GL_TEXTURE_2D, 0);
+    rejectedWidth = 0;
+    rejectedHeight = 0;
     return 1;
 }
 
@@ -500,7 +562,7 @@ static void DrawBlurPass(GLuint sourceTexture, GLuint targetTexture, int horizon
     if (blurMatrixLocation >= 0)
         glpp.UniformMatrix4fv(blurMatrixLocation, 1, GL_FALSE, identity);
     if (blurAmountLocation >= 0)
-        glpp.Uniform1f(blurAmountLocation, 1.70f);
+        glpp.Uniform1f(blurAmountLocation, bloomScale == 8 ? 0.85f : 1.70f);
     if (blurXOffsetLocation >= 0)
         glpp.Uniform1f(blurXOffsetLocation, horizontal ? 1.0f / (GLfloat)effectWidth : 0.0f);
     if (blurYOffsetLocation >= 0)
@@ -623,7 +685,6 @@ void AVP_PostProcess_Render(int width, int height)
     if (!EnsureTextures(width, height))
         return;
 
-    pglGetIntegerv(GL_VIEWPORT, oldViewport);
     /* The source is already drawn into the default framebuffer by the engine. */
     glpp.ActiveTexture(GL_TEXTURE0);
     CopyFramebufferToTexture(sceneTexture, width, height);
@@ -671,6 +732,27 @@ void AVP_PostProcess_Render(int width, int height)
     (void)height;
 }
 
+void AVP_PostProcess_InvalidateContext(void)
+{
+#if !defined(USE_OPENGL_ES)
+    sceneTexture = brightTexture = blurTextureA = blurTextureB = 0;
+    meterTexture = exposureTexture = 0;
+    sceneWidth = sceneHeight = effectWidth = effectHeight = 0;
+    bloomScale = 4;
+    brightProgram = blurProgram = compositeProgram = meterProgram = exposureAdaptProgram = 0;
+    brightSceneLocation = brightExposureLocation = brightThresholdLocation = brightSoftKneeLocation = -1;
+    meterSceneLocation = -1;
+    adaptMeterLocation = adaptExposureLocation = adaptDeltaTimeLocation = adaptInitializedLocation = -1;
+    blurTextureLocation = blurMatrixLocation = blurAmountLocation = -1;
+    blurXOffsetLocation = blurYOffsetLocation = -1;
+    compositeSceneLocation = compositeBlurLocation = compositeExposureLocation = compositeStrengthLocation = -1;
+    exposureInitialized = 0;
+    lastExposureTick = 0;
+    rejectedWidth = rejectedHeight = 0;
+    ppAvailable = 0;
+#endif
+}
+
 void AVP_PostProcess_Shutdown(void)
 {
 #if !defined(USE_OPENGL_ES)
@@ -693,6 +775,7 @@ void AVP_PostProcess_Shutdown(void)
         meterTexture = exposureTexture = 0;
         sceneWidth = sceneHeight = effectWidth = effectHeight = 0;
     }
+    bloomScale = 4;
     if (brightProgram && glpp.DeleteProgram)
         glpp.DeleteProgram(brightProgram);
     if (blurProgram && glpp.DeleteProgram)
@@ -712,6 +795,7 @@ void AVP_PostProcess_Shutdown(void)
     compositeSceneLocation = compositeBlurLocation = compositeExposureLocation = compositeStrengthLocation = -1;
     exposureInitialized = 0;
     lastExposureTick = 0;
+    rejectedWidth = rejectedHeight = 0;
     ppAvailable = 0;
 #endif
 }
