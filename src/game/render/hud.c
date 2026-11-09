@@ -98,8 +98,10 @@ static int NoOfMTBlips=0;
 static int MTSoundHandle=SOUND_NOACTIVEINDEX;
 int predHUDSoundHandle=SOUND_NOACTIVEINDEX;
 
-static int HUD_PrimaryRounds;
-static int HUD_SecondaryRounds;
+/* Count-up time per displayed round, in the same units as NormalFrameTime. */
+#define HUD_AMMO_ROUND_TIME 512
+static int HUD_PrimaryAmmoProgress;
+static int HUD_SecondaryAmmoProgress;
 /* numerics buffer - the marine has more digits on his HUD than the other species */
 char ValueOfHUDDigit[MAX_NO_OF_MARINE_HUD_DIGITS];
 
@@ -249,8 +251,8 @@ void InitMarineHUD(void)
 	GunMuzzleSightX = (ScreenDescriptorBlock.SDB_Width<<15);
 	GunMuzzleSightY = (ScreenDescriptorBlock.SDB_Height<<15);
 
-	HUD_PrimaryRounds = 0;
-	HUD_SecondaryRounds = 0;
+	HUD_PrimaryAmmoProgress = 0;
+	HUD_SecondaryAmmoProgress = 0;
 	
 }
 
@@ -282,8 +284,8 @@ void ReInitHUD(void)
 	GunMuzzleSightX = (ScreenDescriptorBlock.SDB_Width<<15);
 	GunMuzzleSightY = (ScreenDescriptorBlock.SDB_Height<<15);
 
-	HUD_PrimaryRounds = 0;
-	HUD_SecondaryRounds = 0;
+	HUD_PrimaryAmmoProgress = 0;
+	HUD_SecondaryAmmoProgress = 0;
 	
 	/* KJL 14:21:54 17/11/98 - Predator */
 	InitialiseGrapplingHook();
@@ -971,22 +973,10 @@ static void DisplayMarinesAmmo(void)
 	secondaryRounds=weaponPtr->SecondaryRoundsRemaining>>16;
     if ( (weaponPtr->SecondaryRoundsRemaining&0xffff) ) secondaryRounds+=1;
 
-	if (primaryRounds>HUD_PrimaryRounds)
-	{
-		HUD_PrimaryRounds += NormalFrameTime/512;
-	}
-	if (primaryRounds<HUD_PrimaryRounds)
-	{
-		HUD_PrimaryRounds = primaryRounds;
-	}
-	if (secondaryRounds>HUD_SecondaryRounds)
-	{
-		HUD_SecondaryRounds += NormalFrameTime/512;
-	}
-	if (secondaryRounds<HUD_SecondaryRounds)
-	{
-		HUD_SecondaryRounds = secondaryRounds;
-	}
+	HUD_PrimaryAmmoProgress = min_no_const(HUD_PrimaryAmmoProgress + NormalFrameTime,
+		primaryRounds * HUD_AMMO_ROUND_TIME);
+	HUD_SecondaryAmmoProgress = min_no_const(HUD_SecondaryAmmoProgress + NormalFrameTime,
+		secondaryRounds * HUD_AMMO_ROUND_TIME);
 
     
 	{
@@ -1006,7 +996,7 @@ static void DisplayMarinesAmmo(void)
 	    	TEXTSTRING_MAGAZINES,
 	    	weaponPtr->PrimaryMagazinesRemaining,
 	    	TEXTSTRING_ROUNDS,
-	    	HUD_PrimaryRounds,
+			HUD_PrimaryAmmoProgress / HUD_AMMO_ROUND_TIME,
 			1
 	    );
 	}
@@ -1018,7 +1008,7 @@ static void DisplayMarinesAmmo(void)
         	TEXTSTRING_MAGAZINES,
         	weaponPtr->SecondaryMagazinesRemaining,
         	TEXTSTRING_ROUNDS,
-        	HUD_SecondaryRounds,
+			HUD_SecondaryAmmoProgress / HUD_AMMO_ROUND_TIME,
 			0
         );
 	}
@@ -1031,7 +1021,7 @@ static void DisplayMarinesAmmo(void)
         	TEXTSTRING_MAGAZINES,
         	weaponPtr->SecondaryMagazinesRemaining,
         	TEXTSTRING_ROUNDS,
-        	HUD_SecondaryRounds,
+			HUD_SecondaryAmmoProgress / HUD_AMMO_ROUND_TIME,
 			0
         );
 	}
